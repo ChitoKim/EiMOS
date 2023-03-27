@@ -7,13 +7,13 @@ Japanese Mahjong Legacy Stick Scorer
   This library measures parallel resistances/capacitances of stack-piled score sticks,
   and convert the values into actual scores of 4 mahjong players
   
-  Supported Models
+# Supported Models
   
-  Resistors
+  # Resistors
   AMOS MONSTER, NINJA, etc
   
-  Capacitors
+  # Capacitors
   CENTURY TENPAL(GOLD, SILVER)
   
-  Custom
+  # Custom
   You make your own system, becuase everything is just a passive element value.
