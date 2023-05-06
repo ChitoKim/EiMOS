@@ -10,10 +10,19 @@ Japanese Mahjong Legacy Stick Scorer
 # Supported Models
   
   # Resistors
-  AMOS MONSTER, NINJA, etc
+  [AMOS MONSTER, NINJA, etc](doc/AMOS_MONSTER.txt)
   
   # Capacitors
-  CENTURY TENPAL(GOLD, SILVER)
+  [CENTURY TENPAL GOLD](doc/CENTURY_TENPAL_GOLD.txt)
   
+  [CENTURY TENPAL SILVER](doc/CENTURY_TENPAL_SILVER.txt)
   # Custom
   You make your own system, becuase everything is just a passive element value.
+  
+# Example Diagram
+[Example](doc/PICO_AMOS_MONSTER.pdf)
+
+
+MCU : Raspberry Pi Pico(RP2040)
+
+Model : AMOS MONSTER (in fact resistors equivalent to the model)
