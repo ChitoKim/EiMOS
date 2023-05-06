@@ -7,6 +7,15 @@ Japanese Mahjong Legacy Stick Scorer
   This library measures parallel resistances/capacitances of stack-piled score sticks,
   and convert the values into actual scores of 4 mahjong players
   
+# Features
+-Realtime score tracking for all 4 people
+
+-Outputs error message when the sticks are in wrong places
+
+-Manage display mode(NORMAL, DIFF, PM) with push buttons for each player
+
+-Manage honbas with a push button
+  
 # Supported Models
   
   # Resistors
