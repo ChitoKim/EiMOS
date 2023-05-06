@@ -1,0 +1,5 @@
+{
+    "sketch": "examples\\PICO_AMOS_MONSTER\\PICO_AMOS_MOSNTER.ino",
+    "configuration": "flash=2097152_0,freq=133,opt=Small,rtti=Disabled,stackprotect=Disabled,exceptions=Disabled,dbgport=Disabled,dbglvl=None,usbstack=picosdk,ipstack=ipv4only,uploadmethod=default",
+    "board": "rp2040:rp2040:rpipico"
+}

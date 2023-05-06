@@ -42,6 +42,7 @@ typedef struct PIN
   float R_REF[4]; //reference resistor used to divide voltages
   float R_PAR[4]; //resistance parallel to the capacitor; only for specific types of models
                   //such as GOLD-stick CENTURY TENPAL
+  float weight[4]; //only for resistors. add weight to the ratio calculated 
 } PIN;
 typedef struct VAL
 {
@@ -50,5 +51,6 @@ typedef struct VAL
   int error[4]; //checks if the sticks are in the right places; if error 1, if not 0
   int mode[4];  //display mode of the scores : NORMAL, DIFF(score difference), PM(+/-)
   int honba;
+  int bust_offset; //dealing with the 10k busting sticks; subtracts the offset from players' scores
   unsigned long lastTime;
 } VAL;

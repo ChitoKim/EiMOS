@@ -17,13 +17,16 @@ int button_mode[] =
 int button_honba = 32;
 float RES_AMOS_MONSTER[] =
 {
+  // in kiloohms
   20.0f, 100.0f, 1000.0f ,1000.0f
 };
 float R_REF[] =
 {
+  // in kiloohms
   2.0f, 22.0f, 22.0f, 22.0f 
 };
 mahjongAsst Asst(analog_pin, RES_AMOS_MONSTER, R_REF);
+float weight[] = {0.3f, 0.6f, 0.3f, 0.3f};
 
 void
 setup()
@@ -35,8 +38,8 @@ setup()
   Asst.setMesType(RES);     //choose measure type; resistance(RES) or CAP(capacitance)
   Asst.setPullType(PULLDOWN); //choose whether to pull up or down the reference resistors
                               //one of these: PULLUP, PULLDOWN, INPUT_PULLUP
-  // Asst.setMUX4051(address_pin, enable_pin); //set two 74hc4051 ics to multiplex 16 analog inputs
-                                            //3 address pins shared, and 
+  // Asst.setOffset(200);
+  Asst.setWeight(weight);
   Asst.setMUX4067(address_pin);
   Asst.setModeButton(button_mode);
   Asst.setHonbaButton(button_honba);

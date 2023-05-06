@@ -21,13 +21,16 @@ int button_mode[] =
 int button_honba = 10;
 float RES_AMOS_MONSTER[] =
 {
+  // in kiloohms
   20.0f, 100.0f, 1000.0f ,1000.0f
 };
 float R_REF[] =
 {
+  // in kiloohms
   2.0f, 22.0f, 22.0f, 22.0f 
 };
 mahjongAsst Asst(analog_pin, RES_AMOS_MONSTER, R_REF);
+float weight[] = {0.3f, 0.6f, 0.3f, 0.3f};
 
 void
 setup()
@@ -44,6 +47,8 @@ setup()
   Asst.setMUX4067(address_pin);
   Asst.setModeButton(button_mode);
   Asst.setHonbaButton(button_honba);
+  // Asst.setOffset(200);
+  Asst.setWeight(weight);
 }
 void
 loop()

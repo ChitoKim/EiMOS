@@ -92,10 +92,17 @@ public:
   void  setMesType(int a);
   void  setModeButton(int a[]);
   void  setHonbaButton(int a);
-
   void  setADCResolution(int a);
+  void  setWeight(float a[]);
+  void  setOffset(int a);
+
   void  getScore(int scr[]);
+  int   *getScore();
   void  getError(int err[]);
+  int   *getError();
+  void  getMode(int mode[]);
+  int   *getMode();
+  int   getHonba();
 
   int   boolRead(int pin);
   int   adcRead(int pin);

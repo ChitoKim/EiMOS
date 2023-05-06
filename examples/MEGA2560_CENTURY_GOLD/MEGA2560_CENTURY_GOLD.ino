@@ -22,15 +22,17 @@ int button_mode[] =
 int button_honba = 19;
 float CAP_CENTURY_GOLD[] =
 {
+  //in kiloohms
   5.0f, 10.0f, 1.0f, 1.0f
 };
 float CAP_CENTURY_SILVER[] =
 {
+  //in nanoFarads
   225.0f, 10.0f, 1.0f, 1.0f
 };
 float R_REF[] =
 {
-  //internal pullup resistor
+  //internal pullup resistor; in kiloohms
   34.8f, 34.8f, 34.8f, 34.8f 
 };
 float CENTURY_GOLD_R_PAR[] =
@@ -51,6 +53,7 @@ setup()
   Asst.setParRes(CENTURY_GOLD_R_PAR); // if silver sticks, comment this
   Asst.setModeButton(button_mode);
   Asst.setHonbaButton(button_honba);
+  // Asst.setOffset(200);
   Asst.begin();
 }
 void
