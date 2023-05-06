@@ -1,0 +1,20 @@
+Silver Type
+
+Capacitances of one stick:
+10000  5000    1000  500     100
+450nF  225nF   10nF  5nF     10nF
+
+Define unit capacitances as:
+
+float CAP_CENTURY_SILVER[] =
+{
+  225.0f, 10.0f, 1.0f, 1.0f
+};
+
+define mahjongAsst object like
+
+mahjongAsst Asst(charge_pin, analog_pin, CAP_CENTURY_SILVER, R_REF);
+
+in setup function, you should set this
+
+Asst.setMesType(CAP);

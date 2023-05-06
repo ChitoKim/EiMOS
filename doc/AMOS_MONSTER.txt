@@ -1,0 +1,18 @@
+resistances
+10000    5000    1000    500     100
+10kOhm   20kOhm  100kOhm 200kOhm 1MOhm
+
+define the resistances as:
+
+float RES_AMOS_MONSTER[] =
+{
+  20.0f, 100.0f, 1000.0f, 1000.0f
+};
+
+define your object as;
+
+mahjongAsst Asst(analog_pin, RES_AMOS_MONSTER, R_REF);
+
+in setup function, set this:
+
+Asst.setMesType(RES);

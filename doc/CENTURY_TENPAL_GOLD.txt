@@ -1,0 +1,31 @@
+Gold Type
+
+10000  5000    1000  500     100
+10nF   5nF     10nF   5nF    10nF
+
+* Gold Type 5000/10000 sticks have parallel resistor:
+
+5000     10000
+500kOhm  1MOhm
+
+Define unit capacitances as:
+
+float CAP_CENTURY_GOLD[] =
+{
+  225.0f, 10.0f, 1.0f, 1.0f
+};
+
+define parallel resistances as:
+float PAR_RES[] = 
+{
+  1000.0f, PIN_NONE, PIN_NONE, PIN_NONE
+};
+
+define mahjongAsst object like
+
+mahjongAsst Asst(charge_pin, analog_pin, CAP_CENTURY_GOLD, R_REF);
+
+in setup function, you should set this
+
+Asst.setMesType(CAP);
+Asst.setParRes(PAR_RES);
