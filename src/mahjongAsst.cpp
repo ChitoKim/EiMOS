@@ -51,10 +51,11 @@ PIN DEFAULT_PIN =
   PIN_NONE,
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
-  {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE}
+  {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
+  {0.3f, 0.3f, 0.3f, 0.3f}
 };
 
-VAL DEFAULT_VAL = {{0, 0, 0, 0}, {0, 0, 0, 0}, {NORMAL, NORMAL, NORMAL, NORMAL}, DEFAULT_HONBA, 0L};
+VAL DEFAULT_VAL = {{0, 0, 0, 0}, {0, 0, 0, 0}, {NORMAL, NORMAL, NORMAL, NORMAL}, DEFAULT_HONBA, 0, 0L};
 
 mahjongAsst::mahjongAsst(MUX *mux, ENV *env, PIN *pin, VAL *val)
 {
@@ -181,6 +182,16 @@ mahjongAsst::setADCResolution(int bit)
 #endif
 }
 void
+mahjongAsst::setWeight(float weight[])
+{
+  memcpy(pin_p->weight, weight, 4 * sizeof(int));
+}
+void
+mahjongAsst::setOffset(int offset)
+{
+  val_p->bust_offset = offset;
+}
+void
 mahjongAsst::setModeButton(int btn[])
 {
   int i;
@@ -204,12 +215,12 @@ void
 mahjongAsst::getScore(int scr[])
 {
   //copy the scores to the array scr
-  int i;
-  int *score = val_p->score;
-  for(i = 0; i < 4; i++)
-  {
-    scr[i] = score[i];
-  }
+  memcpy(scr, val_p->score, 4 * sizeof(int));
+}
+int
+*mahjongAsst::getScore()
+{
+  return val_p->score;
 }
 
 void
@@ -218,10 +229,27 @@ mahjongAsst::getError(int err[])
   //copy the errors to the array scr
   int i;
   int *error = val_p->error;
-  for(i = 0; i < 4; i++)
-  {
-    err[i] = error[i];
-  }
+  memcpy(err, val_p->error, 4 * sizeof(int));
+}
+int
+*mahjongAsst::getError()
+{
+  return val_p->error;
+}
+void
+mahjongAsst::getMode(int mode[])
+{
+  memcpy(mode, val_p->mode, 4 * sizeof(int));
+}
+int
+*mahjongAsst::getMode()
+{
+  return val_p->mode;
+}
+int
+mahjongAsst::getHonba()
+{
+  return val_p->honba;
 }
 int
 mahjongAsst::boolRead(int pin)
@@ -295,6 +323,7 @@ mahjongAsst::scoreLoop(int num[])
   int NSLOT = env_p->NSLOT;
   int *error = val_p->error;
   int *score = val_p->score;
+  int offset = val_p->bust_offset;
   for(i = 0; i < 4; i++)
   {
     score[i] = 0;
@@ -303,11 +332,13 @@ mahjongAsst::scoreLoop(int num[])
     {
       error[i] = num[3 * i] < 0 || num[3 * i + 1] < 0 || num[3 * i + 2] < 0;
       score[i] = 50 * num[3 * i] + 10 * num[3 * i + 1] + 1 * num[3 * i + 2];
+      score[i] -= offset;
     }
     else if(NSLOT == 4) 
     {
       error[i] = num[4 * i] < 0 || num[4 * i + 1] < 0 || num[4 * i + 2] < 0 || num[4 * i + 3] < 0;
       score[i] = 50 * num[4 * i] + 10 * num[4 * i + 1] + 1 * num[4 * i + 2] + 1 * num[4 * i + 3];
+      score[i] -= offset;
     }
   }
 }
@@ -456,7 +487,7 @@ mahjongAsst::valToNum(float val, int slot_num)
   int   i = 0, num = 0;
   int   NSLOT = env_p->NSLOT;
   float ratio = -2.0f;
-  float weight = 0.4f;
+  float weight = (pin_p->weight)[slot_num % NSLOT];
   float val_unit = (pin_p->val_per_unit)[slot_num % NSLOT];
   float r_par = (pin_p->R_PAR)[slot_num % NSLOT];
   float r_ref = (pin_p->R_REF)[slot_num % NSLOT];
