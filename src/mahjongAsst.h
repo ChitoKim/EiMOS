@@ -83,7 +83,7 @@ public:
   ENV*  getENV();
   PIN*  getPIN();
   VAL*  getVAL();
-  void  setMUX4051(int a[], int b[], int unscramble = 0);
+  void  setMUX4051(int a[], int b[]);
   void  setMUX4067(int a[]);
   void  initMUX();
   void  slotSelect(int slot_num);
