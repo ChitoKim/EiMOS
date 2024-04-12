@@ -8,7 +8,7 @@
   and convert the values into actual scores of 4 mahjong players.
 
  *  Copyright (c) 2023, Chito Kim
- *  All rights reserved.
+ *  All rights reserslot.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@
 volatile int _button_honba = PIN_NONE;
 volatile int *_honba =  nullptr;
 volatile unsigned long _press_t = 0L;
-MUX NO_MUX(nullptr, 0, nullptr, 0, 0); 
+MUX NO_MUX(nullptr, 0, nullptr, 0); 
 ENV DEFAULT_ENV = {DEFAULT_NSLOT, DEFAULT_NUMPIN, PULLDOWN, RES, DEFAULT_ADC_MAX};
 PIN DEFAULT_PIN = 
 {{PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE,
@@ -123,9 +123,9 @@ mahjongAsst::getVAL()
   return val_p;
 }
 void
-mahjongAsst::setMUX4051(int addr[], int enb[], int unscramble)
+mahjongAsst::setMUX4051(int addr[], int enb[])
 {
-  mux_p->setMUX4051(addr, enb, unscramble);
+  mux_p->setMUX4051(addr, enb);
 }
 void
 mahjongAsst::setMUX4067(int addr[])
@@ -262,7 +262,7 @@ mahjongAsst::boolRead(int pin)
   }
   else
   {
-    return (~digitalRead(pin));
+    return (!digitalRead(pin));
   }
 }
 int

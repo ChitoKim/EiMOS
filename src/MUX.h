@@ -29,13 +29,11 @@ private:
   int address_size;
   int *enable;
   int enable_size;
-  int unscramble_4051;
 public:
-  MUX(int addr[], int addr_size, int enb[], int enb_size, int unscramble = 0);
-  void setMUX4051(int a[], int b[], int unscramble = 0);
+  MUX(int addr[], int addr_size, int enb[], int enb_size);
+  void setMUX4051(int a[], int b[]);
   void setMUX4067(int a[]);
   void initMUX();
-  int  unScramble4051(int slot_num);
   void slotSelect(int slot_num);
   void enbSelect(int a);
   void writeAddress(int n, int state);
