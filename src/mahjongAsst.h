@@ -44,6 +44,8 @@ defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_STM32)
 
 #include  "components.h"
 #include  "MUX.h"
+#include  "ADS1X15.h"
+
 #define   DEFAULT_ADC_MAX  1024
 #define   DEFAULT_NSLOT    4
 #define   DEFAULT_NUMPIN   16
@@ -79,6 +81,7 @@ public:
   mahjongAsst(int charge[], int analog, float v_unit[], float ref[]);
   mahjongAsst(int analog, float v_unit[], float ref[]);
   mahjongAsst(int analog[], float v_unit[], float ref[]);
+  mahjongAsst(int charge[], ADS1X15 *ext_adc[], float v_unit[], float ref[]);
   MUX*  getMUX();
   ENV*  getENV();
   PIN*  getPIN();
@@ -86,6 +89,7 @@ public:
   void  setMUX4051(int a[], int b[]);
   void  setMUX4067(int a[]);
   void  initMUX();
+  void  initExtADC();
   void  slotSelect(int slot_num);
   void  setNSlot(int a);
   void  setPullType(int a);
@@ -106,6 +110,7 @@ public:
 
   int   boolRead(int pin);
   int   adcRead(int pin);
+  int   extAdcRead(int no, int slot);
   void  pullAnalog(int apin);
   
   void  mesLoop(float val[]);
@@ -128,8 +133,7 @@ public:
   ////
   void  setParRes(float f[]);
   int   hasParRes(float f);
-  float adcToCap(unsigned long t , int adc, float r);
-  float correctCap(float f, float r, float ref);
+  float adcToCap(unsigned long t , int adc, float r, float c_unit, float r_par);
   void  discharge(int cpin, int apin);
   void  charge(int cpin);
   //

@@ -34,6 +34,7 @@ typedef struct ENV
 typedef struct PIN
 {
   //handles gpio pins and measurement parameters
+  ADS1X15 *ext_adc[4];
   int charge_pin[16];    // pins determine to charge/discharge capacitors
   int analog_pin[16];    // analog pins measuring voltages
   int button_mode[4];    // button pin controlling the display modes(INPUT_PULLUP)
