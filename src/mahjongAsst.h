@@ -133,7 +133,8 @@ public:
   ////
   void  setParRes(float f[]);
   int   hasParRes(float f);
-  float adcToCap(unsigned long t , int adc, float r, float c_unit, float r_par);
+  float adcToCap(unsigned long t , int adc, float r);
+  float correctCap(float f, float r, float ref);
   void  discharge(int cpin, int apin);
   void  charge(int cpin);
   //
