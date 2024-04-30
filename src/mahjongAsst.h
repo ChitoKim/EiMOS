@@ -82,6 +82,7 @@ public:
   mahjongAsst(int analog, float v_unit[], float ref[]);
   mahjongAsst(int analog[], float v_unit[], float ref[]);
   mahjongAsst(int charge[], ADS1X15 *ext_adc[], float v_unit[], float ref[]);
+  mahjongAsst(ADS1X15 *ext_adc[], float v_unit[], float ref[]);
   MUX*  getMUX();
   ENV*  getENV();
   PIN*  getPIN();
@@ -109,8 +110,8 @@ public:
   int   getHonba();
 
   int   boolRead(int pin);
-  int   adcRead(int pin);
-  int   extAdcRead(int no, int slot);
+  uint16_t adcRead(int pin);
+  uint16_t extAdcRead(int no, int slot);
   void  pullAnalog(int apin);
   
   void  mesLoop(float val[]);
@@ -128,12 +129,12 @@ public:
 
   //resistance specific////
   ////
-  float adcToRes(int adc, float r);
+  float adcToRes(uint16_t adc, float r);
   //capacitance specific///
   ////
   void  setParRes(float f[]);
   int   hasParRes(float f);
-  float adcToCap(unsigned long t , int adc, float r);
+  float adcToCap(unsigned long t , uint16_t adc, float r);
   float correctCap(float f, float r, float ref);
   void  discharge(int cpin, int apin);
   void  charge(int cpin);

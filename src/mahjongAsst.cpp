@@ -103,6 +103,21 @@ mahjongAsst::mahjongAsst(int analog, float v_unit[], float ref[])
   memcpy(pin_p->val_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
 }
+mahjongAsst::mahjongAsst(int charge[], ADS1X15 *ext_adc[], float v_unit[], float ref[])
+: mahjongAsst(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+{
+  memcpy(pin_p->charge_pin, charge, 16 * sizeof(int));
+  memcpy(pin_p->ext_adc, ext_adc, 4 * sizeof(ADS1X15*));
+  memcpy(pin_p->val_per_unit, v_unit, 4 * sizeof(float));
+  memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
+}
+mahjongAsst::mahjongAsst(ADS1X15 *ext_adc[], float v_unit[], float ref[])
+: mahjongAsst(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+{
+  memcpy(pin_p->ext_adc, ext_adc, 4 * sizeof(ADS1X15*));
+  memcpy(pin_p->val_per_unit, v_unit, 4 * sizeof(float));
+  memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
+}
 MUX*
 mahjongAsst::getMUX()
 {
@@ -142,9 +157,14 @@ mahjongAsst::initMUX()
 void
 mahjongAsst::initExtADC()
 {
-  if(pin_p->ext_adc[0] == nullptr)
+  ADS1X15 *ads = nullptr; 
+  for(int i = 0; i < 4 && (ads = pin_p->ext_adc[i]) != nullptr; i++)
   {
-    return;
+    ads->begin();
+    ads->setGain(0);
+    ads->setDataRate(7);
+    ads->setMode(0);
+    ads->readADC(0);
   }
 }
 void
@@ -274,7 +294,7 @@ mahjongAsst::boolRead(int pin)
     return (!digitalRead(pin));
   }
 }
-int
+uint16_t
 mahjongAsst::adcRead(int pin)
 {
   //analogRead, if PULLDOWN, invert the output
@@ -290,10 +310,10 @@ mahjongAsst::adcRead(int pin)
     return (ADC_MAX - analogRead(pin));
   }
 }
-int
+uint16_t
 mahjongAsst::extAdcRead(int no, int slot)
 {
-  int adc;
+  uint16_t adc;
   int pull_type = env_p->pull_type;
   int ADC_MAX = env_p->ADC_MAX;
 
@@ -307,6 +327,10 @@ void
 mahjongAsst::pullAnalog(int apin)
 {
   //setting pinMode according to the pulltype
+  if(pin_p->analog_pin[0] == PIN_NONE)
+  {
+    return;
+  }
   int pin_mode = (env_p->pull_type == INPUT_PULLUP) ? INPUT_PULLUP : INPUT;
   pinMode(apin, pin_mode);
 }
@@ -458,7 +482,8 @@ mahjongAsst::mesVal(int slot_num)
   int cpin = (pin_p->charge_pin)[slot_num];
   int apin = (pin_p->analog_pin)[slot_num];
 
-  int adc, dig_val;
+  uint16_t adc;
+  int dig_val;
   float val_unit = (pin_p->val_per_unit)[slot_num % NSLOT];
   float r_ref = (pin_p->R_REF)[slot_num % NSLOT];
   float r_par = (pin_p->R_REF)[slot_num % NSLOT];
@@ -547,7 +572,7 @@ mahjongAsst::valToNum(float val, int slot_num)
 //resistance specific
 //////
 float
-mahjongAsst::adcToRes(int adc, float ref)
+mahjongAsst::adcToRes(uint16_t adc, float ref)
 {
 //calculate resistance
   return (float) adc * ref / (float) (env_p->ADC_MAX - adc);
@@ -567,7 +592,7 @@ mahjongAsst::hasParRes(float f)
   //return false because by default parres equals to PIN_NONE
 }
 float
-mahjongAsst::adcToCap(unsigned long t , int adc, float r_ref)
+mahjongAsst::adcToCap(unsigned long t , uint16_t adc, float r_ref)
 {
 //calculate capacitance using charge time and capacitor voltage
   return  - (float) t / r_ref / log(1.0f - (float) adc / (float) env_p->ADC_MAX);
