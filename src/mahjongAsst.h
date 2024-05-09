@@ -50,7 +50,7 @@ defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_STM32)
 #define   DEFAULT_NSLOT    4
 #define   DEFAULT_NUMPIN   16
 #define   DEFAULT_HONBA    0
-#define   MAXSTICK         20
+#define   MAXSTICK         30
 #define   MAXSTICK_100P    50
 
 #define   RES             0
@@ -98,6 +98,7 @@ public:
   void  setModeButton(int a[]);
   void  setHonbaButton(int a);
   void  setADCResolution(int a);
+  void  setExtADC(int gain, int bit, float vcc, int mode = 0);
   void  setWeight(float a[]);
   void  setOffset(int a);
 

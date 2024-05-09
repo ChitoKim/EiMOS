@@ -58,6 +58,11 @@ PIN DEFAULT_PIN =
 
 VAL DEFAULT_VAL = {{0, 0, 0, 0}, {0, 0, 0, 0}, {NORMAL, NORMAL, NORMAL, NORMAL}, DEFAULT_HONBA, 0, 0L};
 
+float VRANGE[] =
+{
+  6.144f, 4.096f, 2.048f, 1.024f, .512f, .256f
+};
+
 mahjongAsst::mahjongAsst(MUX *mux, ENV *env, PIN *pin, VAL *val)
 {
   mux_p = mux;
@@ -163,7 +168,7 @@ mahjongAsst::initExtADC()
     ads->begin();
     ads->setGain(0);
     ads->setDataRate(7);
-    ads->setMode(0);
+    ads->setMode(0); 
     ads->readADC(0);
   }
 }
@@ -209,6 +214,15 @@ mahjongAsst::setADCResolution(int bit)
 #ifdef ADC_RESOLUTION_MUTABLE
   analogReadResolution(bit);
 #endif
+}
+void
+mahjongAsst::setExtADC(int gain, int bit, float vcc, int mode)
+{
+  for(int i = 0; i < 4 && pin_p->ext_adc[i] != nullptr; i++)
+  {
+    pin_p->ext_adc[i]->setGain(gain);
+  }
+  env_p->ADC_MAX = (uint16_t) ((float) (1 << (bit - !mode)) * ( vcc / VRANGE[gain]));
 }
 void
 mahjongAsst::setWeight(float weight[])
@@ -459,7 +473,7 @@ mahjongAsst::prepMes(int slot_num)
   switch(mes_type)
   {
     case RES:
-      pinMode(apin, OUTPUT);
+      // pinMode(apin, OUTPUT);
       delay(1);
       slotSelect(slot_num);
       delay(1);
@@ -494,8 +508,9 @@ mahjongAsst::mesVal(int slot_num)
     case RES:
       pullAnalog(apin);
       delay(1);
-      pinMode(apin, INPUT);
-      adc = adcRead(apin);
+      // pinMode(apin, INPUT);
+      // adc = adcRead(apin);
+      adc = extAdcRead(0, 0);
       RC = adcToRes(adc, r_ref); // read resistor voltage and calculate resistance
       break;
     case CAP:

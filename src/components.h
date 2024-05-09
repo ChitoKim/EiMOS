@@ -30,7 +30,7 @@ typedef struct ENV
   int NUMPIN;   //total number of slots; 12 or 16
   int pull_type; // PULLUP, PULLDOWN, or INPUT_PULLUP
   int mes_type;  // RES, or CAP
-  int ADC_MAX;   // MAX adc value; for avr-arduinos, 1024
+  uint16_t ADC_MAX;   // MAX adc value; for avr-arduinos, 1024
 } ENV;
 typedef struct PIN
 {
