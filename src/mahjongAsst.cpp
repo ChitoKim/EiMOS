@@ -321,9 +321,9 @@ mahjongAsst::scoreLoop(int num[])
  //finally outputing the score
   int i;
   int NSLOT = env_p->NSLOT;
-  int *error = RLC_p->error;
-  int *score = RLC_p->score;
-  int offset = RLC_p->bust_offset;
+  int *error = val_p->error;
+  int *score = val_p->score;
+  int offset = val_p->bust_offset;
   for(i = 0; i < 4; i++)
   {
     score[i] = 0;
@@ -347,7 +347,7 @@ mahjongAsst::modeLoop()
 {
   int i, tmp;
   int *button_mode = pin_p->button_mode;
-  int *mode = RLC_p->mode;
+  int *mode = val_p->mode;
   if(button_mode[0] == PIN_NONE)
   {
     return;
@@ -375,11 +375,11 @@ mahjongAsst::loop(int period_ms)
 {
   unsigned long currentTime, dt;
   currentTime = millis();
-  dt = currentTime - RLC_p->lastTime; 
+  dt = currentTime - val_p->lastTime; 
   if(dt > period_ms)
   {
     this->loop();
-    RLC_p->lastTime = currentTime;
+    val_p->lastTime = currentTime;
   }
 }
 void
