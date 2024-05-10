@@ -21,7 +21,6 @@
  */
 #ifndef _COMPONENTS_H
 #define _COMPONENTS_H
-#endif
 typedef struct ENV
 {
   //handles overall environment: number of slots, type of electrical components, etc
@@ -54,3 +53,4 @@ typedef struct VAL
   int bust_offset; //dealing with the 10k busting sticks; subtracts the offset from players' scores
   unsigned long lastTime;
 } VAL;
+#endif

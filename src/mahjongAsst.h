@@ -34,7 +34,6 @@
 
 #ifndef _MAHJONGASST_H
 #define _MAHJONGASST_H
-#endif
 
 #if defined(ARDUINO_ARCH_SAM) || defined(ARDUINO_ARCH_RP2040) || \
 defined(ARDUINO_ARCH_MBED_RP2040) || defined(ARDUINO_ARCH_ESP32)  || \
@@ -140,3 +139,4 @@ public:
   //
 };
 void _HONBA();
+#endif
