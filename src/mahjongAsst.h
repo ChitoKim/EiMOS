@@ -63,7 +63,7 @@ defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_STM32)
 #endif
 //INPUT_PULLUP
 
-#define  MAXTIME          0xFFFFFFFFL
+#define  MAXTIME          sizeof(unsigned long)
 
 #define  NORMAL           1
 #define  DIFF             0
