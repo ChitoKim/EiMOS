@@ -22,7 +22,6 @@
 #include "ADS1X15.h"
 #ifndef _COMPONENTS_H
 #define _COMPONENTS_H
-#endif
 typedef struct ENV
 {
   //handles overall environment: number of slots, type of electrical components, etc
@@ -40,7 +39,7 @@ typedef struct PIN
   int analog_pin[16];    // analog pins measuring voltages
   int button_mode[4];    // button pin controlling the display modes(INPUT_PULLUP)
   int button_honba;      // button pin controlling the honbas(INPUT_PULLUP)
-  float val_per_unit[4]; // resistor/capacitor value per stick
+  float RLC_per_unit[4]; // resistor/capacitor value per stick
   float R_REF[4]; //reference resistor used to divide voltages
   float R_PAR[4]; //resistance parallel to the capacitor; only for specific types of models
                   //such as GOLD-stick CENTURY TENPAL
@@ -56,3 +55,4 @@ typedef struct VAL
   int bust_offset; //dealing with the 10k busting sticks; subtracts the offset from players' scores
   unsigned long lastTime;
 } VAL;
+#endif

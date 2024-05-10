@@ -21,7 +21,6 @@
 
 #ifndef _MUX_H
 #define _MUX_H
-#endif
 class MUX
 {
 private:
@@ -39,3 +38,4 @@ public:
   void writeAddress(int n, int state);
   void writeEnable(int n, int state);
 };
+#endif

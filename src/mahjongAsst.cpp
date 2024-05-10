@@ -75,14 +75,14 @@ mahjongAsst::mahjongAsst(int charge[], int analog[], float v_unit[], float ref[]
 {
   memcpy(pin_p->charge_pin, charge, 16 * sizeof(int));
   memcpy(pin_p->analog_pin, analog, 16 * sizeof(int));
-  memcpy(pin_p->val_per_unit, v_unit, 4 * sizeof(float));
+  memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
 }
 mahjongAsst::mahjongAsst(int analog[], float v_unit[], float ref[]) 
 : mahjongAsst(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
 {
   memcpy(pin_p->analog_pin, analog, 16 * sizeof(int));
-  memcpy(pin_p->val_per_unit, v_unit, 4 * sizeof(float));
+  memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
 }
 mahjongAsst::mahjongAsst(int charge[], int analog, float v_unit[], float ref[])
@@ -94,7 +94,7 @@ mahjongAsst::mahjongAsst(int charge[], int analog, float v_unit[], float ref[])
   {
     (pin_p->analog_pin)[i] = analog;
   }
-  memcpy(pin_p->val_per_unit, v_unit, 4 * sizeof(float));
+  memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
 }
 mahjongAsst::mahjongAsst(int analog, float v_unit[], float ref[])
@@ -105,7 +105,7 @@ mahjongAsst::mahjongAsst(int analog, float v_unit[], float ref[])
   {
     (pin_p->analog_pin)[i] = analog;
   }
-  memcpy(pin_p->val_per_unit, v_unit, 4 * sizeof(float));
+  memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
 }
 mahjongAsst::mahjongAsst(int charge[], ADS1X15 *ext_adc[], float v_unit[], float ref[])
@@ -113,14 +113,14 @@ mahjongAsst::mahjongAsst(int charge[], ADS1X15 *ext_adc[], float v_unit[], float
 {
   memcpy(pin_p->charge_pin, charge, 16 * sizeof(int));
   memcpy(pin_p->ext_adc, ext_adc, 4 * sizeof(ADS1X15*));
-  memcpy(pin_p->val_per_unit, v_unit, 4 * sizeof(float));
+  memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
 }
 mahjongAsst::mahjongAsst(ADS1X15 *ext_adc[], float v_unit[], float ref[])
 : mahjongAsst(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
 {
   memcpy(pin_p->ext_adc, ext_adc, 4 * sizeof(ADS1X15*));
-  memcpy(pin_p->val_per_unit, v_unit, 4 * sizeof(float));
+  memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
 }
 MUX*
@@ -350,26 +350,26 @@ mahjongAsst::pullAnalog(int apin)
 }
 
 void
-mahjongAsst::mesLoop(float val[])
+mahjongAsst::mesLoop(float RLC[])
 {
- //store R or C in the array val
+ //store R or C in the array RLC
   int i;
   for(i = 0; i < env_p->NUMPIN; i++) 
   {
-    val[i] = 0;
+    RLC[i] = 0;
     prepMes(i);
-    val[i] = mesVal(i);
+    RLC[i] = mesRLC(i);
   }
 }
 void
-mahjongAsst::numLoop(float val[], int num[])
+mahjongAsst::numLoop(float RLC[], int num[])
 {
  //store number of sticks in the array num
   int i;
   for(i = 0; i < env_p->NUMPIN; i++) 
   { 
     num[i] = 0;
-    num[i] = valToNum(val[i], i);
+    num[i] = RLCToNum(RLC[i], i);
     if((i % env_p->NSLOT) < 2)
       num[i] = (num[i] > MAXSTICK) ? -1 : num[i];
     else
@@ -424,11 +424,11 @@ mahjongAsst::modeLoop()
 void
 mahjongAsst::loop()
 {
-  float val[16];
+  float RLC[16];
   int   num[16];
   modeLoop();
-  mesLoop(val);
-  numLoop(val, num);
+  mesLoop(RLC);
+  numLoop(RLC, num);
   scoreLoop(num);
 }
 void
@@ -444,11 +444,11 @@ mahjongAsst::loop(int period_ms)
   }
 }
 void
-mahjongAsst::loop(float val[], int num[])
+mahjongAsst::loop(float RLC[], int num[])
 {
   modeLoop();
-  mesLoop(val);
-  numLoop(val, num);
+  mesLoop(RLC);
+  numLoop(RLC, num);
   scoreLoop(num);
 }
 //
@@ -487,7 +487,7 @@ mahjongAsst::prepMes(int slot_num)
   }
 }
 float
-mahjongAsst::mesVal(int slot_num)
+mahjongAsst::mesRLC(int slot_num)
 {
   int NSLOT = env_p->NSLOT;
   int pull_type = env_p->pull_type;
@@ -498,7 +498,7 @@ mahjongAsst::mesVal(int slot_num)
 
   uint16_t adc;
   int dig_val;
-  float val_unit = (pin_p->val_per_unit)[slot_num % NSLOT];
+  float RLC_unit = (pin_p->RLC_per_unit)[slot_num % NSLOT];
   float r_ref = (pin_p->R_REF)[slot_num % NSLOT];
   float r_par = (pin_p->R_REF)[slot_num % NSLOT];
   float RC;
@@ -547,19 +547,19 @@ mahjongAsst::mesVal(int slot_num)
   return RC;
 }
 int
-mahjongAsst::valToNum(float val, int slot_num)
+mahjongAsst::RLCToNum(float RLC, int slot_num)
 {
   int   i = 0, num = 0;
   int   NSLOT = env_p->NSLOT;
   float ratio = -2.0f;
   float weight = (pin_p->weight)[slot_num % NSLOT];
-  float val_unit = (pin_p->val_per_unit)[slot_num % NSLOT];
+  float RLC_unit = (pin_p->RLC_per_unit)[slot_num % NSLOT];
   float r_par = (pin_p->R_PAR)[slot_num % NSLOT];
   float r_ref = (pin_p->R_REF)[slot_num % NSLOT];
   switch(env_p->mes_type)
   {
     case RES:
-      ratio = val_unit / val;
+      ratio = RLC_unit / RLC;
       num = (int) (ratio + weight);
       if(ratio < 0.8f) 
       {
@@ -567,7 +567,7 @@ mahjongAsst::valToNum(float val, int slot_num)
       }
     break;
     case CAP:
-      ratio = val / val_unit;
+      ratio = RLC / RLC_unit;
       if(hasParRes(r_par))
       {
         ratio = correctCap(ratio, r_par, r_ref);
