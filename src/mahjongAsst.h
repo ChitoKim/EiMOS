@@ -48,15 +48,20 @@ defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_STM32)
 #define   DEFAULT_NSLOT    4
 #define   DEFAULT_NUMPIN   16
 #define   DEFAULT_HONBA    0
-#define   MAXSTICK         20
+#define   MAXSTICK         25
 #define   MAXSTICK_100P    50
 
 #define   RES             0
 #define   CAP             1
 #define   PIN_NONE       -1
 
+#ifndef   PULLUP
 #define   PULLUP          5
+#endif
+
+#ifndef   PULLDOWN
 #define   PULLDOWN        -1
+#endif
 //INPUT_PULLUP
 
 #define  MAXTIME          0xFFFFFFFFL
@@ -108,18 +113,18 @@ public:
   int   adcRead(int pin);
   void  pullAnalog(int apin);
   
-  void  mesLoop(float val[]);
-  void  numLoop(float val[], int num[]);
+  void  mesLoop(float RLC[]);
+  void  numLoop(float RLC[], int num[]);
   void  scoreLoop(int num[]);
   void  modeLoop();
   void  loop();
   void  loop(int period_ms);
-  void  loop(float val[], int num[]);
+  void  loop(float RLC[], int num[]);
 
   void  begin();  
   void  prepMes(int slot_num);
-  float mesVal(int slot_num);
-  int   valToNum(float val, int slot_num);
+  float mesRLC(int slot_num);
+  int   RLCToNum(float RLC, int slot_num);
 
   //resistance specific////
   ////
