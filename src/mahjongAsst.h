@@ -115,6 +115,7 @@ public:
   int   getHonba();
 
   int   boolRead(int pin);
+  int   extAdcBoolRead(int no, int slot);
   uint16_t adcRead(int pin);
   uint16_t extAdcRead(int no, int slot);
   void  pullAnalog(int apin);
@@ -142,6 +143,7 @@ public:
   float adcToCap(unsigned long t , uint16_t adc, float r);
   float correctCap(float f, float r, float ref);
   void  discharge(int cpin, int apin);
+  void  discharge(int a, int b, int c);
   void  charge(int cpin);
   //
 };

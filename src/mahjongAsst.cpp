@@ -33,6 +33,11 @@
 #include  "mahjongAsst.h"
 #include  <Arduino.h>
 
+#define   EXTADCNUM (pin_p->ext_adc[2] == nullptr) ? 1 : ((pin_p->ext_adc[3]) ? 4 : 3) //calculate number of adcs
+#define   EXTADCNO(x)  x / EXTADCNUM //calculate which adc to use
+#define   EXTADCSLOT(x) (EXTADCNUM == 1) ? 0 : x % EXTADCNUM //calculate which slot to use
+
+
 volatile int _button_honba = PIN_NONE;
 volatile int *_honba =  nullptr;
 volatile unsigned long _press_t = 0L;
@@ -40,6 +45,7 @@ MUX NO_MUX(nullptr, 0, nullptr, 0);
 ENV DEFAULT_ENV = {DEFAULT_NSLOT, DEFAULT_NUMPIN, PULLDOWN, RES, DEFAULT_ADC_MAX};
 PIN DEFAULT_PIN = 
 { {nullptr, nullptr, nullptr, nullptr},
+  0,
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE,
   PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE,
   PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE,
@@ -308,6 +314,21 @@ mahjongAsst::boolRead(int pin)
     return (!digitalRead(pin));
   }
 }
+int
+mahjongAsst::extAdcBoolRead(int no, int slot)
+{
+  int pull_type = env_p->pull_type;
+  int ADC_MAX = env_p->ADC_MAX;
+
+  if(pull_type == INPUT_PULLUP || pull_type == PULLUP)
+  {
+    return (analogRead(pin));
+  }
+  else
+  {
+    return (ADC_MAX - analogRead(pin));
+  }
+}
 uint16_t
 mahjongAsst::adcRead(int pin)
 {
@@ -508,9 +529,9 @@ mahjongAsst::mesRLC(int slot_num)
     case RES:
       pullAnalog(apin);
       delay(1);
-      // pinMode(apin, INPUT);
-      // adc = adcRead(apin);
-      adc = extAdcRead(0, 0);
+      pinMode(apin, INPUT);
+      adc = (pin_p->ext_adc[0] == nullptr) ? 
+      adcRead(apin) : extAdcRead(EXTADCNO(slot_num), EXTADCSLOT(slot_num));
       RC = adcToRes(adc, r_ref); // read resistor voltage and calculate resistance
       break;
     case CAP:
@@ -520,7 +541,8 @@ mahjongAsst::mesRLC(int slot_num)
       //start charging
       do 
       {
-        dig_val = boolRead(apin);
+        dig_val = (pin_p->ext_adc[0] == nullptr) ? 
+        boolRead(apin) : extAdcBoolRead(EXTADCNO(slot_num), EXTADCSLOT(slot_num));
         tf = micros();
         dt = (tf > t) ? tf - t : MAXTIME - t + tf;
       } while(!dig_val && dt < 1000000L); //measure time until charged
@@ -629,6 +651,13 @@ mahjongAsst::discharge(int cpin, int apin)
   pinMode(apin, OUTPUT);
   digitalWrite(apin, LOW);
   while(adcRead(apin)) ;
+}
+void
+mahjongAsst::discharge(int cpin, int no, int slot)
+{
+  pinMode(cpin, OUTPUT);
+  digitalWrite(cpin, LOW);
+  while(extAdcRead(no, slot)) ;
 }
 void
 mahjongAsst::charge(int cpin)
