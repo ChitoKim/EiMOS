@@ -34,7 +34,7 @@
 #include  <Arduino.h>
 
 #define   EXTADCNUM (pin_p->ext_adc[2] == nullptr) ? 1 : ((pin_p->ext_adc[3]) ? 4 : 3) //calculate number of adcs
-#define   EXTADCNO(x)  x / EXTADCNUM //calculate which adc to use
+#define   EXTADCNO(x)  (EXTADCNUM == 1) ? 0 : x / EXTADCNUM //calculate which adc to use
 #define   EXTADCSLOT(x) (EXTADCNUM == 1) ? 0 : x % EXTADCNUM //calculate which slot to use
 
 
@@ -172,7 +172,6 @@ mahjongAsst::initExtADC()
   for(int i = 0; i < 4 && (ads = pin_p->ext_adc[i]) != nullptr; i++)
   {
     ads->begin();
-    ads->setGain(0);
     ads->setDataRate(7);
     ads->setMode(0); 
     ads->readADC(0);
@@ -224,6 +223,7 @@ mahjongAsst::setADCResolution(int bit)
 void
 mahjongAsst::setExtADC(int gain, int bit, float vcc, int mode)
 {
+  //mode; 0 : single-ended input, 1 : differential input
   for(int i = 0; i < 4 && pin_p->ext_adc[i] != nullptr; i++)
   {
     pin_p->ext_adc[i]->setGain(gain);
@@ -314,21 +314,6 @@ mahjongAsst::boolRead(int pin)
     return (!digitalRead(pin));
   }
 }
-int
-mahjongAsst::extAdcBoolRead(int no, int slot)
-{
-  int pull_type = env_p->pull_type;
-  int ADC_MAX = env_p->ADC_MAX;
-
-  if(pull_type == INPUT_PULLUP || pull_type == PULLUP)
-  {
-    return (analogRead(pin));
-  }
-  else
-  {
-    return (ADC_MAX - analogRead(pin));
-  }
-}
 uint16_t
 mahjongAsst::adcRead(int pin)
 {
@@ -346,11 +331,13 @@ mahjongAsst::adcRead(int pin)
   }
 }
 uint16_t
-mahjongAsst::extAdcRead(int no, int slot)
+mahjongAsst::extADCRead(int slot_num)
 {
   uint16_t adc;
   int pull_type = env_p->pull_type;
   int ADC_MAX = env_p->ADC_MAX;
+  int no = EXTADCNO(slot_num);
+  int slot = EXTADCSLOT(slot_num);
 
   ADS1X15 *ADS = pin_p->ext_adc[no];
   adc = ADS->readADC(slot);
@@ -494,7 +481,10 @@ mahjongAsst::prepMes(int slot_num)
   switch(mes_type)
   {
     case RES:
-      // pinMode(apin, OUTPUT);
+      if(pin_p->ext_adc[0] == nullptr)
+      {
+        pinMode(apin, OUTPUT);
+      }
       delay(1);
       slotSelect(slot_num);
       delay(1);
@@ -531,7 +521,7 @@ mahjongAsst::mesRLC(int slot_num)
       delay(1);
       pinMode(apin, INPUT);
       adc = (pin_p->ext_adc[0] == nullptr) ? 
-      adcRead(apin) : extAdcRead(EXTADCNO(slot_num), EXTADCSLOT(slot_num));
+      adcRead(apin) : extADCRead(slot_num);
       RC = adcToRes(adc, r_ref); // read resistor voltage and calculate resistance
       break;
     case CAP:
@@ -541,8 +531,7 @@ mahjongAsst::mesRLC(int slot_num)
       //start charging
       do 
       {
-        dig_val = (pin_p->ext_adc[0] == nullptr) ? 
-        boolRead(apin) : extAdcBoolRead(EXTADCNO(slot_num), EXTADCSLOT(slot_num));
+        dig_val = boolRead(apin);
         tf = micros();
         dt = (tf > t) ? tf - t : MAXTIME - t + tf;
       } while(!dig_val && dt < 1000000L); //measure time until charged
@@ -651,13 +640,6 @@ mahjongAsst::discharge(int cpin, int apin)
   pinMode(apin, OUTPUT);
   digitalWrite(apin, LOW);
   while(adcRead(apin)) ;
-}
-void
-mahjongAsst::discharge(int cpin, int no, int slot)
-{
-  pinMode(cpin, OUTPUT);
-  digitalWrite(cpin, LOW);
-  while(extAdcRead(no, slot)) ;
 }
 void
 mahjongAsst::charge(int cpin)

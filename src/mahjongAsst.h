@@ -49,7 +49,7 @@ defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_STM32)
 #define   DEFAULT_NSLOT    4
 #define   DEFAULT_NUMPIN   16
 #define   DEFAULT_HONBA    0
-#define   MAXSTICK         25
+#define   MAXSTICK         50
 #define   MAXSTICK_100P    50
 
 #define   RES             0
@@ -115,9 +115,8 @@ public:
   int   getHonba();
 
   int   boolRead(int pin);
-  int   extAdcBoolRead(int no, int slot);
   uint16_t adcRead(int pin);
-  uint16_t extAdcRead(int no, int slot);
+  uint16_t extADCRead(int slot_num);
   void  pullAnalog(int apin);
   
   void  mesLoop(float RLC[]);
@@ -143,7 +142,6 @@ public:
   float adcToCap(unsigned long t , uint16_t adc, float r);
   float correctCap(float f, float r, float ref);
   void  discharge(int cpin, int apin);
-  void  discharge(int a, int b, int c);
   void  charge(int cpin);
   //
 };
