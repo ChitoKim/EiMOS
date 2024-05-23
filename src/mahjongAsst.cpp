@@ -33,7 +33,7 @@
 #include  "mahjongAsst.h"
 #include  <Arduino.h>
 
-#define   EXTADCNUM (pin_p->ext_adc[2] == nullptr) ? 1 : ((pin_p->ext_adc[3]) ? 4 : 3) //calculate number of adcs
+#define   EXTADCNUM (pin_p->ext_adc[2] == nullptr) ? 1 : ((pin_p->ext_adc[3] == nullptr) ? 3 : 4) //calculate number of adcs
 #define   EXTADCNO(x)  (EXTADCNUM == 1) ? 0 : x / EXTADCNUM //calculate which adc to use
 #define   EXTADCSLOT(x) (EXTADCNUM == 1) ? 0 : x % EXTADCNUM //calculate which slot to use
 
