@@ -19,6 +19,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include "ADS1X15.h"
 #ifndef _COMPONENTS_H
 #define _COMPONENTS_H
 typedef struct ENV
@@ -28,11 +29,13 @@ typedef struct ENV
   int NUMPIN;   //total number of slots; 12 or 16
   int pull_type; // PULLUP, PULLDOWN, or INPUT_PULLUP
   int mes_type;  // RES, or CAP
-  int ADC_MAX;   // MAX adc value; for avr-arduinos, 1024
+  uint16_t ADC_MAX;   // MAX adc value; for avr-arduinos, 1024
 } ENV;
 typedef struct PIN
 {
   //handles gpio pins and measurement parameters
+  ADS1X15 *ext_adc[4];
+  int extADCMode;
   int charge_pin[16];    // pins determine to charge/discharge capacitors
   int analog_pin[16];    // analog pins measuring voltages
   int button_mode[4];    // button pin controlling the display modes(INPUT_PULLUP)

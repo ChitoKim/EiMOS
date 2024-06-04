@@ -43,6 +43,8 @@ defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_STM32)
 
 #include  "components.h"
 #include  "MUX.h"
+#include  "ADS1X15.h"
+
 #define   DEFAULT_ADC_MAX  1024
 #define   DEFAULT_NSLOT    4
 #define   DEFAULT_NUMPIN   16
@@ -83,6 +85,8 @@ public:
   mahjongAsst(int charge[], int analog, float v_unit[], float ref[]);
   mahjongAsst(int analog, float v_unit[], float ref[]);
   mahjongAsst(int analog[], float v_unit[], float ref[]);
+  mahjongAsst(int charge[], ADS1X15 *ext_adc[], float v_unit[], float ref[]);
+  mahjongAsst(ADS1X15 *ext_adc[], float v_unit[], float ref[]);
   MUX*  getMUX();
   ENV*  getENV();
   PIN*  getPIN();
@@ -90,6 +94,7 @@ public:
   void  setMUX4051(int a[], int b[]);
   void  setMUX4067(int a[]);
   void  initMUX();
+  void  initExtADC();
   void  slotSelect(int slot_num);
   void  setNSlot(int a);
   void  setPullType(int a);
@@ -97,6 +102,7 @@ public:
   void  setModeButton(int a[]);
   void  setHonbaButton(int a);
   void  setADCResolution(int a);
+  void  setExtADC(int gain, int bit, float vcc, int mode = 0);
   void  setWeight(float a[]);
   void  setOffset(int a);
 
@@ -109,7 +115,8 @@ public:
   int   getHonba();
 
   int   boolRead(int pin);
-  int   adcRead(int pin);
+  uint16_t adcRead(int pin);
+  uint16_t extADCRead(int slot_num);
   void  pullAnalog(int apin);
   
   void  mesLoop(float RLC[]);
@@ -127,12 +134,12 @@ public:
 
   //resistance specific////
   ////
-  float adcToRes(int adc, float r);
+  float adcToRes(uint16_t adc, float r);
   //capacitance specific///
   ////
   void  setParRes(float f[]);
   int   hasParRes(float f);
-  float adcToCap(unsigned long t , int adc, float r);
+  float adcToCap(unsigned long t , uint16_t adc, float r);
   float correctCap(float f, float r, float ref);
   void  discharge(int cpin, int apin);
   void  charge(int cpin);

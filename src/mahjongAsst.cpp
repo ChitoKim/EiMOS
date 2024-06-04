@@ -33,13 +33,20 @@
 #include  "mahjongAsst.h"
 #include  <Arduino.h>
 
+#define   EXTADCNUM (pin_p->ext_adc[2] == nullptr) ? 1 : ((pin_p->ext_adc[3] == nullptr) ? 3 : 4) //calculate number of adcs
+#define   EXTADCNO(x)  (EXTADCNUM == 1) ? 0 : x / EXTADCNUM //calculate which adc to use
+#define   EXTADCSLOT(x) (EXTADCNUM == 1) ? 0 : x % EXTADCNUM //calculate which slot to use
+
+
 volatile int _button_honba = PIN_NONE;
 volatile int *_honba =  nullptr;
 volatile unsigned long _press_t = 0L;
 MUX NO_MUX(nullptr, 0, nullptr, 0); 
 ENV DEFAULT_ENV = {DEFAULT_NSLOT, DEFAULT_NUMPIN, PULLDOWN, RES, DEFAULT_ADC_MAX};
 PIN DEFAULT_PIN = 
-{{PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE,
+{ {nullptr, nullptr, nullptr, nullptr},
+  0,
+  {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE,
   PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE,
   PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE,
   PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
@@ -56,6 +63,11 @@ PIN DEFAULT_PIN =
 };
 
 VAL DEFAULT_VAL = {{0, 0, 0, 0}, {0, 0, 0, 0}, {NORMAL, NORMAL, NORMAL, NORMAL}, DEFAULT_HONBA, 0, 0L};
+
+float VRANGE[] =
+{
+  6.144f, 4.096f, 2.048f, 1.024f, .512f, .256f
+};
 
 mahjongAsst::mahjongAsst(MUX *mux, ENV *env, PIN *pin, VAL *val)
 {
@@ -102,6 +114,21 @@ mahjongAsst::mahjongAsst(int analog, float v_unit[], float ref[])
   memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
 }
+mahjongAsst::mahjongAsst(int charge[], ADS1X15 *ext_adc[], float v_unit[], float ref[])
+: mahjongAsst(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+{
+  memcpy(pin_p->charge_pin, charge, 16 * sizeof(int));
+  memcpy(pin_p->ext_adc, ext_adc, 4 * sizeof(ADS1X15*));
+  memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
+  memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
+}
+mahjongAsst::mahjongAsst(ADS1X15 *ext_adc[], float v_unit[], float ref[])
+: mahjongAsst(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+{
+  memcpy(pin_p->ext_adc, ext_adc, 4 * sizeof(ADS1X15*));
+  memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
+  memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
+}
 MUX*
 mahjongAsst::getMUX()
 {
@@ -137,6 +164,18 @@ mahjongAsst::initMUX()
 {
   //initialise the pins of MUX
   mux_p->initMUX();
+}
+void
+mahjongAsst::initExtADC()
+{
+  ADS1X15 *ads = nullptr; 
+  for(int i = 0; i < 4 && (ads = pin_p->ext_adc[i]) != nullptr; i++)
+  {
+    ads->begin();
+    ads->setDataRate(7);
+    ads->setMode(0); 
+    ads->readADC(0);
+  }
 }
 void
 mahjongAsst::slotSelect(int slot_num)
@@ -180,6 +219,16 @@ mahjongAsst::setADCResolution(int bit)
 #ifdef ADC_RESOLUTION_MUTABLE
   analogReadResolution(bit);
 #endif
+}
+void
+mahjongAsst::setExtADC(int gain, int bit, float vcc, int mode)
+{
+  //mode; 0 : single-ended input, 1 : differential input
+  for(int i = 0; i < 4 && pin_p->ext_adc[i] != nullptr; i++)
+  {
+    pin_p->ext_adc[i]->setGain(gain);
+  }
+  env_p->ADC_MAX = (uint16_t) ((float) (1 << (bit - !mode)) * ( vcc / VRANGE[gain]));
 }
 void
 mahjongAsst::setWeight(float weight[])
@@ -265,12 +314,13 @@ mahjongAsst::boolRead(int pin)
     return (!digitalRead(pin));
   }
 }
-int
+uint16_t
 mahjongAsst::adcRead(int pin)
 {
   //analogRead, if PULLDOWN, invert the output
   int pull_type = env_p->pull_type;
   int ADC_MAX = env_p->ADC_MAX;
+
   if(pull_type == INPUT_PULLUP || pull_type == PULLUP)
   {
     return (analogRead(pin));
@@ -280,10 +330,29 @@ mahjongAsst::adcRead(int pin)
     return (ADC_MAX - analogRead(pin));
   }
 }
+uint16_t
+mahjongAsst::extADCRead(int slot_num)
+{
+  uint16_t adc;
+  int pull_type = env_p->pull_type;
+  int ADC_MAX = env_p->ADC_MAX;
+  int no = EXTADCNO(slot_num);
+  int slot = EXTADCSLOT(slot_num);
+
+  ADS1X15 *ADS = pin_p->ext_adc[no];
+  adc = ADS->readADC(slot);
+  adc = (pull_type == PULLDOWN) ? ADC_MAX - adc : adc;
+  
+  return adc;
+}
 void
 mahjongAsst::pullAnalog(int apin)
 {
   //setting pinMode according to the pulltype
+  if(pin_p->analog_pin[0] == PIN_NONE)
+  {
+    return;
+  }
   int pin_mode = (env_p->pull_type == INPUT_PULLUP) ? INPUT_PULLUP : INPUT;
   pinMode(apin, pin_mode);
 }
@@ -412,7 +481,10 @@ mahjongAsst::prepMes(int slot_num)
   switch(mes_type)
   {
     case RES:
-      pinMode(apin, OUTPUT);
+      if(pin_p->ext_adc[0] == nullptr)
+      {
+        pinMode(apin, OUTPUT);
+      }
       delay(1);
       slotSelect(slot_num);
       delay(1);
@@ -435,8 +507,11 @@ mahjongAsst::mesRLC(int slot_num)
   int cpin = (pin_p->charge_pin)[slot_num];
   int apin = (pin_p->analog_pin)[slot_num];
 
-  int adc, dig_val;
+  uint16_t adc;
+  int dig_val;
+  float RLC_unit = (pin_p->RLC_per_unit)[slot_num % NSLOT];
   float r_ref = (pin_p->R_REF)[slot_num % NSLOT];
+  float r_par = (pin_p->R_REF)[slot_num % NSLOT];
   float RC;
   unsigned long t, tf, dt, discharge_t;
   switch(mes_type)
@@ -445,7 +520,8 @@ mahjongAsst::mesRLC(int slot_num)
       pullAnalog(apin);
       delay(1);
       pinMode(apin, INPUT);
-      adc = adcRead(apin);
+      adc = (pin_p->ext_adc[0] == nullptr) ? 
+      adcRead(apin) : extADCRead(slot_num);
       RC = adcToRes(adc, r_ref); // read resistor voltage and calculate resistance
       break;
     case CAP:
@@ -522,7 +598,7 @@ mahjongAsst::RLCToNum(float RLC, int slot_num)
 //resistance specific
 //////
 float
-mahjongAsst::adcToRes(int adc, float ref)
+mahjongAsst::adcToRes(uint16_t adc, float ref)
 {
 //calculate resistance
   return (float) adc * ref / (float) (env_p->ADC_MAX - adc);
@@ -542,7 +618,7 @@ mahjongAsst::hasParRes(float f)
   //return false because by default parres equals to PIN_NONE
 }
 float
-mahjongAsst::adcToCap(unsigned long t , int adc, float r_ref)
+mahjongAsst::adcToCap(unsigned long t , uint16_t adc, float r_ref)
 {
 //calculate capacitance using charge time and capacitor voltage
   return  - (float) t / r_ref / log(1.0f - (float) adc / (float) env_p->ADC_MAX);
