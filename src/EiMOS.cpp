@@ -1,7 +1,10 @@
 /*
   Special Thanks to Mahjong
 
-  mahjongAsst Library - mahjongAsst.h
+  EiMOS Library - EiMOS.cpp
+  # Formerly known as mahjongAsst
+  # Renamed June 6, 2024
+
   A Library for legacy scoring system of Japanese mahjong tables.
   Legacy mahjong scorers implement special score sticks containing electrical elements such as R, L, or C.
   This library measures parallel resistances/capacitances of stack-piled score sticks,
@@ -30,7 +33,7 @@
   logarithm is first designed by Jonathan Nethercott.
   https://github.com/codewrite/arduino-capacitor
 */
-#include  "mahjongAsst.h"
+#include  "EiMOS.h"
 #include  <Arduino.h>
 
 #define   EXTADCNUM (pin_p->ext_adc[2] == nullptr) ? 1 : ((pin_p->ext_adc[3] == nullptr) ? 3 : 4) //calculate number of adcs
@@ -69,30 +72,30 @@ float VRANGE[] =
   6.144f, 4.096f, 2.048f, 1.024f, .512f, .256f
 };
 
-mahjongAsst::mahjongAsst(MUX *mux, ENV *env, PIN *pin, VAL *val)
+EiMOS::EiMOS(MUX *mux, ENV *env, PIN *pin, VAL *val)
 {
   mux_p = mux;
   env_p = env;
   pin_p = pin;
   val_p = val;
 }
-mahjongAsst::mahjongAsst(int charge[], int analog[], float v_unit[], float ref[])
-: mahjongAsst(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+EiMOS::EiMOS(int charge[], int analog[], float v_unit[], float ref[])
+: EiMOS(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
 {
   memcpy(pin_p->charge_pin, charge, 16 * sizeof(int));
   memcpy(pin_p->analog_pin, analog, 16 * sizeof(int));
   memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
 }
-mahjongAsst::mahjongAsst(int analog[], float v_unit[], float ref[]) 
-: mahjongAsst(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+EiMOS::EiMOS(int analog[], float v_unit[], float ref[]) 
+: EiMOS(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
 {
   memcpy(pin_p->analog_pin, analog, 16 * sizeof(int));
   memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
 }
-mahjongAsst::mahjongAsst(int charge[], int analog, float v_unit[], float ref[])
-: mahjongAsst(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+EiMOS::EiMOS(int charge[], int analog, float v_unit[], float ref[])
+: EiMOS(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
 {
   int i;
   memcpy(pin_p->charge_pin, charge, 16 * sizeof(int));
@@ -103,8 +106,8 @@ mahjongAsst::mahjongAsst(int charge[], int analog, float v_unit[], float ref[])
   memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
 }
-mahjongAsst::mahjongAsst(int analog, float v_unit[], float ref[])
-: mahjongAsst(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+EiMOS::EiMOS(int analog, float v_unit[], float ref[])
+: EiMOS(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
 {
   int i;
   for(i = 0; i < 16; i++)
@@ -114,59 +117,59 @@ mahjongAsst::mahjongAsst(int analog, float v_unit[], float ref[])
   memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
 }
-mahjongAsst::mahjongAsst(int charge[], ADS1X15 *ext_adc[], float v_unit[], float ref[])
-: mahjongAsst(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+EiMOS::EiMOS(int charge[], ADS1X15 *ext_adc[], float v_unit[], float ref[])
+: EiMOS(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
 {
   memcpy(pin_p->charge_pin, charge, 16 * sizeof(int));
   memcpy(pin_p->ext_adc, ext_adc, 4 * sizeof(ADS1X15*));
   memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
 }
-mahjongAsst::mahjongAsst(ADS1X15 *ext_adc[], float v_unit[], float ref[])
-: mahjongAsst(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+EiMOS::EiMOS(ADS1X15 *ext_adc[], float v_unit[], float ref[])
+: EiMOS(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
 {
   memcpy(pin_p->ext_adc, ext_adc, 4 * sizeof(ADS1X15*));
   memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float)); 
 }
 MUX*
-mahjongAsst::getMUX()
+EiMOS::getMUX()
 {
   return mux_p;
 }
 ENV*
-mahjongAsst::getENV()
+EiMOS::getENV()
 {
   return env_p;
 }
 PIN*
-mahjongAsst::getPIN()
+EiMOS::getPIN()
 {
   return pin_p;
 }
 VAL*
-mahjongAsst::getVAL()
+EiMOS::getVAL()
 {
   return val_p;
 }
 void
-mahjongAsst::setMUX4051(int addr[], int enb[])
+EiMOS::setMUX4051(int addr[], int enb[])
 {
   mux_p->setMUX4051(addr, enb);
 }
 void
-mahjongAsst::setMUX4067(int addr[])
+EiMOS::setMUX4067(int addr[])
 {
   mux_p->setMUX4067(addr);
 }
 void
-mahjongAsst::initMUX()
+EiMOS::initMUX()
 {
   //initialise the pins of MUX
   mux_p->initMUX();
 }
 void
-mahjongAsst::initExtADC()
+EiMOS::initExtADC()
 {
   ADS1X15 *ads = nullptr; 
   for(int i = 0; i < 4 && (ads = pin_p->ext_adc[i]) != nullptr; i++)
@@ -178,13 +181,13 @@ mahjongAsst::initExtADC()
   }
 }
 void
-mahjongAsst::slotSelect(int slot_num)
+EiMOS::slotSelect(int slot_num)
 {
   //switching to corresponding slot of MUX(es)
   mux_p->slotSelect(slot_num);
 }
 void
-mahjongAsst::setNSlot(int a)
+EiMOS::setNSlot(int a)
 {
   //set the number of slots; 5k 1k 5c 1c or 5k 1k 5c/1c 
   if(a > 4)
@@ -200,19 +203,19 @@ mahjongAsst::setNSlot(int a)
   }
 }
 void
-mahjongAsst::setPullType(int a)
+EiMOS::setPullType(int a)
 {
   //set pull type of resistor
   //PULLUP | INPUT_PULLUP | PULLDOWN 
   env_p->pull_type = a;
 }
 void
-mahjongAsst::setMesType(int a)
+EiMOS::setMesType(int a)
 {
   env_p->mes_type = a;
 }
 void
-mahjongAsst::setADCResolution(int bit)
+EiMOS::setADCResolution(int bit)
 {
   //set ADC_MAX according to the ADC Resolution
   env_p->ADC_MAX = 1 << bit;
@@ -221,7 +224,7 @@ mahjongAsst::setADCResolution(int bit)
 #endif
 }
 void
-mahjongAsst::setExtADC(int gain, int bit, float vcc, int mode)
+EiMOS::setExtADC(int gain, int bit, float vcc, int mode)
 {
   //mode; 0 : single-ended input, 1 : differential input
   for(int i = 0; i < 4 && pin_p->ext_adc[i] != nullptr; i++)
@@ -231,17 +234,17 @@ mahjongAsst::setExtADC(int gain, int bit, float vcc, int mode)
   env_p->ADC_MAX = (uint16_t) ((float) (1 << (bit - !mode)) * ( vcc / VRANGE[gain]));
 }
 void
-mahjongAsst::setWeight(float weight[])
+EiMOS::setWeight(float weight[])
 {
   memcpy(pin_p->weight, weight, 4 * sizeof(int));
 }
 void
-mahjongAsst::setOffset(int offset)
+EiMOS::setOffset(int offset)
 {
   val_p->bust_offset = offset;
 }
 void
-mahjongAsst::setModeButton(int btn[])
+EiMOS::setModeButton(int btn[])
 {
   int i;
   memcpy(pin_p->button_mode, btn, 4 * sizeof(int));
@@ -251,7 +254,7 @@ mahjongAsst::setModeButton(int btn[])
   }
 }
 void
-mahjongAsst::setHonbaButton(int btn)
+EiMOS::setHonbaButton(int btn)
 {
   //set a honba button, attached to interrupt
   pin_p->button_honba = btn;
@@ -261,19 +264,19 @@ mahjongAsst::setHonbaButton(int btn)
   attachInterrupt(btn, _HONBA, CHANGE);
 }
 void
-mahjongAsst::getScore(int scr[])
+EiMOS::getScore(int scr[])
 {
   //copy the scores to the array scr
   memcpy(scr, val_p->score, 4 * sizeof(int));
 }
 int
-*mahjongAsst::getScore()
+*EiMOS::getScore()
 {
   return val_p->score;
 }
 
 void
-mahjongAsst::getError(int err[])
+EiMOS::getError(int err[])
 {
   //copy the errors to the array scr
   int i;
@@ -281,27 +284,27 @@ mahjongAsst::getError(int err[])
   memcpy(err, val_p->error, 4 * sizeof(int));
 }
 int
-*mahjongAsst::getError()
+*EiMOS::getError()
 {
   return val_p->error;
 }
 void
-mahjongAsst::getMode(int mode[])
+EiMOS::getMode(int mode[])
 {
   memcpy(mode, val_p->mode, 4 * sizeof(int));
 }
 int
-*mahjongAsst::getMode()
+*EiMOS::getMode()
 {
   return val_p->mode;
 }
 int
-mahjongAsst::getHonba()
+EiMOS::getHonba()
 {
   return val_p->honba;
 }
 int
-mahjongAsst::boolRead(int pin)
+EiMOS::boolRead(int pin)
 {
   //digitalRead, if PULLDOWN, invert the output
   int pull_type = env_p->pull_type;
@@ -315,7 +318,7 @@ mahjongAsst::boolRead(int pin)
   }
 }
 uint16_t
-mahjongAsst::adcRead(int pin)
+EiMOS::adcRead(int pin)
 {
   //analogRead, if PULLDOWN, invert the output
   int pull_type = env_p->pull_type;
@@ -331,7 +334,7 @@ mahjongAsst::adcRead(int pin)
   }
 }
 uint16_t
-mahjongAsst::extADCRead(int slot_num)
+EiMOS::extADCRead(int slot_num)
 {
   uint16_t adc;
   int pull_type = env_p->pull_type;
@@ -346,7 +349,7 @@ mahjongAsst::extADCRead(int slot_num)
   return adc;
 }
 void
-mahjongAsst::pullAnalog(int apin)
+EiMOS::pullAnalog(int apin)
 {
   //setting pinMode according to the pulltype
   if(pin_p->analog_pin[0] == PIN_NONE)
@@ -358,7 +361,7 @@ mahjongAsst::pullAnalog(int apin)
 }
 
 void
-mahjongAsst::mesLoop(float RLC[])
+EiMOS::mesLoop(float RLC[])
 {
  //store R or C in the array RLC
   int i;
@@ -370,7 +373,7 @@ mahjongAsst::mesLoop(float RLC[])
   }
 }
 void
-mahjongAsst::numLoop(float RLC[], int num[])
+EiMOS::numLoop(float RLC[], int num[])
 {
  //store number of sticks in the array num
   int i;
@@ -385,7 +388,7 @@ mahjongAsst::numLoop(float RLC[], int num[])
   }
 }
 void
-mahjongAsst::scoreLoop(int num[])
+EiMOS::scoreLoop(int num[])
 {
  //finally outputing the score
   int i;
@@ -412,7 +415,7 @@ mahjongAsst::scoreLoop(int num[])
   }
 }
 void
-mahjongAsst::modeLoop()
+EiMOS::modeLoop()
 {
   int i, tmp;
   int *button_mode = pin_p->button_mode;
@@ -430,7 +433,7 @@ mahjongAsst::modeLoop()
   }
 }
 void
-mahjongAsst::loop()
+EiMOS::loop()
 {
   float RLC[16];
   int   num[16];
@@ -440,7 +443,7 @@ mahjongAsst::loop()
   scoreLoop(num);
 }
 void
-mahjongAsst::loop(int period_ms)
+EiMOS::loop(int period_ms)
 {
   unsigned long currentTime, dt;
   currentTime = millis();
@@ -452,7 +455,7 @@ mahjongAsst::loop(int period_ms)
   }
 }
 void
-mahjongAsst::loop(float RLC[], int num[])
+EiMOS::loop(float RLC[], int num[])
 {
   modeLoop();
   mesLoop(RLC);
@@ -462,7 +465,7 @@ mahjongAsst::loop(float RLC[], int num[])
 //
 ///// above : common functions
 void
-mahjongAsst::begin()
+EiMOS::begin()
 {
   int i;
   int NUMPIN = env_p->NSLOT;
@@ -473,7 +476,7 @@ mahjongAsst::begin()
   digitalWrite(LED_BUILTIN, HIGH);
 }
 void
-mahjongAsst::prepMes(int slot_num)
+EiMOS::prepMes(int slot_num)
 {
   int mes_type = env_p->mes_type;
   int cpin = (pin_p->charge_pin)[slot_num];
@@ -498,7 +501,7 @@ mahjongAsst::prepMes(int slot_num)
   }
 }
 float
-mahjongAsst::mesRLC(int slot_num)
+EiMOS::mesRLC(int slot_num)
 {
   int NSLOT = env_p->NSLOT;
   int pull_type = env_p->pull_type;
@@ -558,7 +561,7 @@ mahjongAsst::mesRLC(int slot_num)
   return RC;
 }
 int
-mahjongAsst::RLCToNum(float RLC, int slot_num)
+EiMOS::RLCToNum(float RLC, int slot_num)
 {
   int   i = 0, num = 0;
   int   NSLOT = env_p->NSLOT;
@@ -598,7 +601,7 @@ mahjongAsst::RLCToNum(float RLC, int slot_num)
 //resistance specific
 //////
 float
-mahjongAsst::adcToRes(uint16_t adc, float ref)
+EiMOS::adcToRes(uint16_t adc, float ref)
 {
 //calculate resistance
   return (float) adc * ref / (float) (env_p->ADC_MAX - adc);
@@ -607,24 +610,24 @@ mahjongAsst::adcToRes(uint16_t adc, float ref)
 /////
 
 void
-mahjongAsst::setParRes(float r_par[])
+EiMOS::setParRes(float r_par[])
 {
   memcpy(pin_p->R_PAR, r_par, 4 * sizeof(float));
 }
 int
-mahjongAsst::hasParRes(float f)
+EiMOS::hasParRes(float f)
 {
   return (f > 0.0);
   //return false because by default parres equals to PIN_NONE
 }
 float
-mahjongAsst::adcToCap(unsigned long t , uint16_t adc, float r_ref)
+EiMOS::adcToCap(unsigned long t , uint16_t adc, float r_ref)
 {
 //calculate capacitance using charge time and capacitor voltage
   return  - (float) t / r_ref / log(1.0f - (float) adc / (float) env_p->ADC_MAX);
 }
 float
-mahjongAsst::correctCap(float ratio, float r_par, float r_ref)
+EiMOS::correctCap(float ratio, float r_par, float r_ref)
 {
 //corrects the influence of resistance parallel to a capacitor
 //example : CENTURY_GOLD 5k stick has a 1M parallel resistance
@@ -633,7 +636,7 @@ mahjongAsst::correctCap(float ratio, float r_par, float r_ref)
   return (sqrt(RHO * RHO + 2.0f * RHO * ratio) - RHO);
 }
 void
-mahjongAsst::discharge(int cpin, int apin)
+EiMOS::discharge(int cpin, int apin)
 {
   pinMode(cpin, OUTPUT);
   digitalWrite(cpin, LOW);
@@ -642,7 +645,7 @@ mahjongAsst::discharge(int cpin, int apin)
   while(adcRead(apin)) ;
 }
 void
-mahjongAsst::charge(int cpin)
+EiMOS::charge(int cpin)
 {
   pinMode(cpin, OUTPUT);
   digitalWrite(cpin, (env_p->pull_type == INPUT_PULLUP || env_p->pull_type == PULLUP) ? LOW : HIGH);
