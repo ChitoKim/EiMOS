@@ -59,8 +59,8 @@ setup()
 void
 loop()
 {
-  int score[4] = {};
-  int error[4] = {};
+  int score[4] = {0};
+  int error[4] = {0};
   Asst.loop(500);
   Asst.getScore(score);
   Asst.getError(error);
