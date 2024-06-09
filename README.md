@@ -1,5 +1,4 @@
-# EiMOS
-Japanese Mahjong Legacy Stick Scorer
+# EiMOS : Electrical Impedance to Mahjong Output Scores
 
   A Library for legacy scoring system of Japanese mahjong tables. Formerly known as mahjongAsst.
   Legacy mahjong scorers implement special score sticks containing electrical elements.
