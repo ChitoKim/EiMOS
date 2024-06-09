@@ -1,4 +1,4 @@
-#include <mahjongAsst.h>
+#include <EiMOS.h>
 
 int charge_pin[] =
 {
@@ -40,8 +40,8 @@ float CENTURY_GOLD_R_PAR[] =
   1000.0f, PIN_NONE, PIN_NONE, PIN_NONE
 };
 
-mahjongAsst Asst(charge_pin, analog_pin, CAP_CENTURY_GOLD, R_REF); //CENTURY TENPAL, GOLD sticks
-//mahjongAsst Asst(charge_pin, analog_pin, CAP_CENTURY_SILVER, R_REF); //CENTURY TENPAL, SILVER sticks
+EiMOS Asst(charge_pin, analog_pin, CAP_CENTURY_GOLD, R_REF); //CENTURY TENPAL, GOLD sticks
+//EiMOS Asst(charge_pin, analog_pin, CAP_CENTURY_SILVER, R_REF); //CENTURY TENPAL, SILVER sticks
 
 void
 setup()

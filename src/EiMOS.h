@@ -1,7 +1,10 @@
 /*
   Special Thanks to Mahjong
 
-  mahjongAsst Library - mahjongAsst.h
+  EiMOS Library - EiMOS.h
+  # Formerly known as mahjongAsst
+  # Renamed 6 June, 2024
+
   A Library for legacy scoring system of Japanese mahjong tables.
   Legacy mahjong scorers implement special score sticks containing electrical elements such as R, L, or C.
   This library measures parallel resistances/capacitances of stack-piled score sticks,
@@ -72,7 +75,7 @@ defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_STM32)
 #define  PM               2
 #define  SUM              1000
 
-class mahjongAsst
+class EiMOS
 {
 private:
   MUX *mux_p;
@@ -80,13 +83,13 @@ private:
   PIN *pin_p;
   VAL *val_p;
 public:
-  mahjongAsst(MUX *mux, ENV *env, PIN *pin, VAL *val);
-  mahjongAsst(int charge[], int analog[], float v_unit[], float ref[]);
-  mahjongAsst(int charge[], int analog, float v_unit[], float ref[]);
-  mahjongAsst(int analog, float v_unit[], float ref[]);
-  mahjongAsst(int analog[], float v_unit[], float ref[]);
-  mahjongAsst(int charge[], ADS1X15 *ext_adc[], float v_unit[], float ref[]);
-  mahjongAsst(ADS1X15 *ext_adc[], float v_unit[], float ref[]);
+  EiMOS(MUX *mux, ENV *env, PIN *pin, VAL *val);
+  EiMOS(int charge[], int analog[], float v_unit[], float ref[]);
+  EiMOS(int charge[], int analog, float v_unit[], float ref[]);
+  EiMOS(int analog, float v_unit[], float ref[]);
+  EiMOS(int analog[], float v_unit[], float ref[]);
+  EiMOS(int charge[], ADS1X15 *ext_adc[], float v_unit[], float ref[]);
+  EiMOS(ADS1X15 *ext_adc[], float v_unit[], float ref[]);
   MUX*  getMUX();
   ENV*  getENV();
   PIN*  getPIN();
