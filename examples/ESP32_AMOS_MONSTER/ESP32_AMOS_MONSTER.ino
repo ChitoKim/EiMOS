@@ -1,12 +1,12 @@
 #include <EiMOS.h>
 int button_mode[] =
 {
-  36, 39, 34, 35
+  32, 33, 25, 26
   // 36, 39, 34, 35 are input only pins without internal pullup.
   // so, add external pullup on these
   // if you don't want to, use other pins
 };
-int button_honba = 19;
+int button_honba = 18;
 float RES_AMOS_MONSTER[] =
 {
   //in kiloohms
@@ -20,8 +20,8 @@ float R_REF[] =
 
 ADS1115 ADC0(0x48, &Wire);
 ADS1115 ADC1(0x49, &Wire);
-ADS1115 ADC2(0x4A, &Wire);
-ADS1115 ADC3(0x4B, &Wire);
+ADS1115 ADC2(0x48, &Wire1);
+ADS1115 ADC3(0x49, &Wire1);
 
 ADS1X15 *adc[] = {&ADC0, &ADC1, &ADC2, &ADC3};
 EiMOS EM(adc, RES_AMOS_MONSTER, R_REF);
