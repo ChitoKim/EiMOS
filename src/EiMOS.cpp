@@ -11,7 +11,7 @@
   and convert the values into actual scores of 4 mahjong players.
 
  *  Copyright (c) 2023, Chito Kim
- *  All rights reserslot.
+ *  All rights reserved.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
