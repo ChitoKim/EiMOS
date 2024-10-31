@@ -1,0 +1,36 @@
+BasedOnStyle: Google
+IndentWidth: 2
+ColumnLimit: 0
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignEscapedNewlinesLeft: false  # Changed to false
+AllowShortFunctionsOnASingleLine: None
+AllowShortBlocksOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+BreakBeforeBraces: Allman
+BreakConstructorInitializers: AfterColon
+BreakBeforeBinaryOperators: NonAssignment
+BreakStringLiterals: false
+EmptyLineBeforeAccessModifier: Always
+IncludeBlocks: Preserve
+IncludeCategories:
+  - Regex: '^<.*\.h>'
+    Priority: 1
+  - Regex: '^".*\.h"'
+    Priority: 2
+KeepEmptyLinesAtTheStartOfBlocks: true
+BreakAfterReturnType: AllDefinitions
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: None
+PointerAlignment: Left
+QualifierAlignment: Left
+SpaceAfterCStyleCast: true
+SpaceAfterTemplateKeyword: true
+SpaceBeforeParens: Never
+SpacesBeforeTrailingComments: 1
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+UseTab: Never
+IndentCaseLabels: true
