@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # tested on clang-format version 19.1.3
 
 # Get the directory of the script
@@ -13,5 +12,6 @@ FILES=("$SRC_DIR/EiMOS.cpp" "$SRC_DIR/EiMOS.h" "$SRC_DIR/MUX.cpp" "$SRC_DIR/MUX.
 for FILE in "${FILES[@]}"; do
   clang-format -i -style=file:"$SCRIPT_DIR"/.clang-format "$FILE"
   vim -c '%s/=\n  {\n/= {\r/g' -c 'wq' "$FILE"
+  vim -c '%s/=\n  {{/= {\r  {/g' -c 'wq' "$FILE"
   clang-format -i -style=file:"$SCRIPT_DIR"/.clang-format "$FILE"
 done
