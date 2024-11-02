@@ -1,22 +1,22 @@
-/*  
-  MUX.cpp
-  A library that controlls the switching of an MUX.
+/*
+ MUX.cpp
+ A library that controlls the switching of an MUX.
 
- *  Copyright (c) 2023, Chito Kim
- *  All rights reserved.
+ * Copyright (c) 2023, Chito Kim
+ * All rights reserved.
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "MUX.h"
@@ -50,7 +50,7 @@ MUX::setMUX4067(int addr[])
 void
 MUX::initMUX()
 {
-  //set MUX pins as OUTPUT
+  // set MUX pins as OUTPUT
   int i, n;
   for(i = 0; i < address_size; i++)
   {
@@ -82,13 +82,13 @@ MUX::enbSelect(int a)
   {
     writeEnable(i, (i == a) ? LOW : HIGH);
   }
-} 
-void 
+}
+void
 MUX::writeAddress(int n, int state)
 {
   digitalWrite(address[n], state);
 }
-void 
+void
 MUX::writeEnable(int n, int state)
 {
   digitalWrite(enable[n], state);
