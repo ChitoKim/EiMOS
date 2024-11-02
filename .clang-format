@@ -11,7 +11,7 @@ AllowShortBlocksOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 BreakBeforeBraces: Allman
-BreakConstructorInitializers: AfterColon
+BreakConstructorInitializers: BeforeColon
 BreakBeforeBinaryOperators: NonAssignment
 BreakStringLiterals: false
 EmptyLineBeforeAccessModifier: Always
