@@ -41,6 +41,8 @@
 #define ADC_RESOLUTION_MUTABLE
 #endif
 
+#define REF_CORRECTION_DIMENTION 2
+
 #include "ADS1X15.h"
 #include "MUX.h"
 #include "components.h"
@@ -50,7 +52,11 @@
 #define DEFAULT_NUMPIN 16
 #define DEFAULT_HONBA 0
 #define MAXSTICK 50
-#define MAXSTICK_100P 50
+#define MAXSTICK_10000P 16
+#define MAXSTICK_1000P 16
+#define MAXSTICK_500P 4
+#define MAXSTICK_100P 20
+#define MAXSTICK_100P_3SLOT 40
 
 #define RES 0
 #define CAP 1
@@ -88,6 +94,7 @@ class EiMOS
   EiMOS(int analog[], float v_unit[], float ref[]);
   EiMOS(int charge[], ADS1X15 *ext_adc[], float v_unit[], float ref[]);
   EiMOS(ADS1X15 *ext_adc[], float v_unit[], float ref[]);
+  EiMOS(ADS1X15 *ext_adc[], float v_unit[], float ref[][4]);
   MUX *getMUX();
   ENV *getENV();
   PIN *getPIN();
@@ -105,6 +112,7 @@ class EiMOS
   void setADCResolution(int a);
   void setExtADC(int gain, int bit, float vcc, int mode = 0);
   void setWeight(float a[]);
+  void setWeight(float weight[][4]);
   void setOffset(int a);
 
   void getScore(int scr[]);

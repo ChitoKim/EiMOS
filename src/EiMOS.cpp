@@ -37,8 +37,8 @@
 #include <Arduino.h>
 
 #define EXTADCNUM() ((pin_p->ext_adc[2] == nullptr) ? 1 : ((pin_p->ext_adc[3] == nullptr) ? 3 : 4)) // calculate number of adcs
-#define EXTADCNO(x) (EXTADCNUM() == 1) ? 0 : x / EXTADCNUM()                                        // calculate which adc to use
-#define EXTADCSLOT(x) (EXTADCNUM() == 1) ? 0 : x % EXTADCNUM()                                      // calculate which slot to use
+#define EXTADCNO(x, y) (EXTADCNUM() == 1) ? 0 : ((x) / (y))                                         // calculate which adc to use
+#define EXTADCSLOT(x, y) (EXTADCNUM() == 1) ? 0 : ((x) % (y))                                       // calculate which slot to use
 
 volatile int _button_honba = PIN_NONE;
 volatile int *_honba = nullptr;
@@ -57,11 +57,26 @@ PIN DEFAULT_PIN = {
    PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE,
    PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
-  PIN_NONE,
+  PIN_NONE, // button_honba
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
-  {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
-  {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
-  {0.3f, 0.3f, 0.3f, 0.3f}};
+#if REF_CORRECTION_DIMENTION == 1
+  {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE}, // R_REF 1D
+#elif REF_CORRECTION_DIMENTION == 2
+  {{PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
+   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
+   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
+   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE}}, // R_REF 2D
+#endif
+  {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE}, // R_PAR
+#if REF_CORRECTION_DIMENTION == 1
+  {0.3f, 0.3f, 0.3f, 0.3f} // weight 1D
+#elif REF_CORRECTION_DIMENTION == 2
+  {{0.3f, 0.3f, 0.3f, 0.3f},
+   {0.3f, 0.3f, 0.3f, 0.3f},
+   {0.3f, 0.3f, 0.3f, 0.3f},
+   {0.3f, 0.3f, 0.3f, 0.3f}} // weight 2D
+#endif
+};
 
 VAL DEFAULT_VAL = {{0, 0, 0, 0}, {0, 0, 0, 0}, {NORMAL, NORMAL, NORMAL, NORMAL}, DEFAULT_HONBA, 0, 0L};
 
@@ -127,6 +142,13 @@ EiMOS::EiMOS(ADS1X15 *ext_adc[], float v_unit[], float ref[])
   memcpy(pin_p->ext_adc, ext_adc, 4 * sizeof(ADS1X15 *));
   memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float));
+}
+EiMOS::EiMOS(ADS1X15 *ext_adc[], float v_unit[], float ref[][4])
+    : EiMOS(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+{
+  memcpy(pin_p->ext_adc, ext_adc, 4 * sizeof(ADS1X15 *));
+  memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
+  memcpy(pin_p->R_REF, ref, 16 * sizeof(float));
 }
 MUX *
 EiMOS::getMUX()
@@ -235,6 +257,11 @@ EiMOS::setWeight(float weight[])
   memcpy(pin_p->weight, weight, 4 * sizeof(int));
 }
 void
+EiMOS::setWeight(float weight[][4])
+{
+  memcpy(pin_p->weight, weight, 16 * sizeof(int));
+}
+void
 EiMOS::setOffset(int offset)
 {
   val_p->bust_offset = offset;
@@ -335,8 +362,9 @@ EiMOS::extADCRead(int slot_num)
   uint16_t adc;
   int pull_type = env_p->pull_type;
   int ADC_MAX = env_p->ADC_MAX;
-  int no = EXTADCNO(slot_num);
-  int slot = EXTADCSLOT(slot_num);
+  int NSLOT = env_p->NSLOT;
+  int no = EXTADCNO(slot_num, NSLOT);
+  int slot = EXTADCSLOT(slot_num, NSLOT);
 
   ADS1X15 *ADS = pin_p->ext_adc[no];
   adc = ADS->readADC(slot);
@@ -375,12 +403,28 @@ EiMOS::numLoop(float RLC[], int num[])
   int i;
   for(i = 0; i < env_p->NUMPIN; i++)
   {
-    num[i] = 0;
-    num[i] = RLCToNum(RLC[i], i);
-    if((i % env_p->NSLOT) < 2)
-      num[i] = (num[i] > MAXSTICK) ? -1 : num[i];
-    else
-      num[i] = (num[i] > MAXSTICK_100P) ? -1 : num[i];
+    num[i] = max(0, RLCToNum(RLC[i], i));
+    switch(i % env_p->NSLOT)
+    {
+      case 0:
+        num[i] = min(MAXSTICK_10000P, num[i]);
+        break;
+
+      case 1:
+        num[i] = min(MAXSTICK_1000P, num[i]);
+        break;
+
+      case 2:
+        num[i] = env_p->NSLOT == 4 ? min(MAXSTICK_500P, num[i]) : min(MAXSTICK_100P_3SLOT, num[i]);
+        break;
+
+      case 3:
+        num[i] = min(MAXSTICK_100P, num[i]);
+        break;
+
+      default:
+        break;
+    }
   }
 }
 void
@@ -405,7 +449,7 @@ EiMOS::scoreLoop(int num[])
     else if(NSLOT == 4)
     {
       error[i] = num[4 * i] < 0 || num[4 * i + 1] < 0 || num[4 * i + 2] < 0 || num[4 * i + 3] < 0;
-      score[i] = 50 * num[4 * i] + 10 * num[4 * i + 1] + 1 * num[4 * i + 2] + 1 * num[4 * i + 3];
+      score[i] = 50 * num[4 * i] + 10 * num[4 * i + 1] + 5 * num[4 * i + 2] + 1 * num[4 * i + 3];
       score[i] -= offset;
     }
   }
@@ -509,8 +553,11 @@ EiMOS::mesRLC(int slot_num)
   uint16_t adc;
   int dig_val;
   float RLC_unit = (pin_p->RLC_per_unit)[slot_num % NSLOT];
+#if REF_CORRECTION_DIMENTION == 1
   float r_ref = (pin_p->R_REF)[slot_num % NSLOT];
-  float r_par = (pin_p->R_REF)[slot_num % NSLOT];
+#elif REF_CORRECTION_DIMENTION == 2
+  float r_ref = (pin_p->R_REF)[slot_num / NSLOT][slot_num % NSLOT];
+#endif
   float RC;
   unsigned long t, tf, dt, discharge_t;
   switch(mes_type)
@@ -561,16 +608,26 @@ EiMOS::RLCToNum(float RLC, int slot_num)
   int i = 0, num = 0;
   int NSLOT = env_p->NSLOT;
   float ratio = -2.0f;
+#if REF_CORRECTION_DIMENTION == 1
   float weight = (pin_p->weight)[slot_num % NSLOT];
+#elif REF_CORRECTION_DIMENTION == 2
+  float weight = (pin_p->weight)[slot_num / NSLOT][slot_num % NSLOT];
+#endif
+
   float RLC_unit = (pin_p->RLC_per_unit)[slot_num % NSLOT];
   float r_par = (pin_p->R_PAR)[slot_num % NSLOT];
+#if REF_CORRECTION_DIMENTION == 1
   float r_ref = (pin_p->R_REF)[slot_num % NSLOT];
+#elif REF_CORRECTION_DIMENTION == 2
+  float r_ref = (pin_p->R_REF)[slot_num / NSLOT][slot_num % NSLOT];
+#endif
+
   switch(env_p->mes_type)
   {
     case RES:
       ratio = RLC_unit / RLC;
       num = (int) (ratio + weight);
-      if(ratio < 0.8f)
+      if(slot_num % NSLOT < 2 && ratio < 0.8f || ratio < 0.f)
       {
         num = 0;
       }

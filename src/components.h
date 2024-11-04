@@ -41,10 +41,18 @@ typedef struct PIN
   int button_mode[4];    // button pin controlling the display modes(INPUT_PULLUP)
   int button_honba;      // button pin controlling the honbas(INPUT_PULLUP)
   float RLC_per_unit[4]; // resistor/capacitor value per stick
-  float R_REF[4];        // reference resistor used to divide voltages
-  float R_PAR[4];        // resistance parallel to the capacitor; only for specific types of models
-                         // such as GOLD-stick CENTURY TENPAL
-  float weight[4];       // only for resistors. add weight to the ratio calculated
+#if REF_CORRECTION_DIMENTION == 1
+  float R_REF[4]; // reference resistor used to divide voltages (1 dimention)
+#elif REF_CORRECTION_DIMENTION == 2
+  float R_REF[4][4]; // reference resistor used to divide voltages (2 dimention)
+#endif
+  float R_PAR[4]; // resistance parallel to the capacitor; only for specific types of models
+                  // such as GOLD-stick CENTURY TENPAL
+#if REF_CORRECTION_DIMENTION == 1
+  float weight[4]; // only for resistors. add weight to the ratio calculated (1 dimention)
+#elif REF_CORRECTION_DIMENTION == 2
+  float weight[4][4]; // only for resistors. add weight to the ratio calculated (2 dimention)
+#endif
 } PIN;
 typedef struct VAL
 {
