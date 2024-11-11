@@ -35,3 +35,4 @@ SpacesInAngles: false
 SpacesInCStyleCastParentheses: false
 UseTab: Never
 IndentCaseLabels: true
+AlwaysBreakAfterDefinitionReturnType: All
