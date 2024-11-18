@@ -109,6 +109,7 @@ class EiMOS
   void setMesType(int a);
   void setModeButton(int a[]);
   void setHonbaButton(int a);
+  void setDebounceCount(unsigned int count);
   void setADCResolution(int a);
   void setExtADC(int gain, int bit, float vcc, int mode = 0);
   void setWeight(float a[]);
