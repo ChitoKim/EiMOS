@@ -78,7 +78,24 @@ PIN DEFAULT_PIN = {
 #endif
 };
 
-VAL DEFAULT_VAL = {{0, 0, 0, 0}, {0, 0, 0, 0}, {NORMAL, NORMAL, NORMAL, NORMAL}, DEFAULT_HONBA, 0, 0L};
+VAL DEFAULT_VAL = {
+  {{
+     0,
+   },
+   {
+     0,
+   },
+   {
+     0,
+   }},
+  {0, 0, 0, 0},
+  {0, 0, 0, 0},
+  {NORMAL, NORMAL, NORMAL, NORMAL},
+  DEFAULT_HONBA,
+  0,
+  0L,
+  0,
+};
 
 float VRANGE[] = {
   6.144f, 4.096f, 2.048f, 1.024f, .512f, .256f};
@@ -287,6 +304,11 @@ EiMOS::setHonbaButton(int btn)
   attachInterrupt(btn, _HONBA, CHANGE);
 }
 void
+EiMOS::setDebounceCount(unsigned int count)
+{
+  val_p->debounce_count = count;
+}
+void
 EiMOS::getScore(int scr[])
 {
   // copy the scores to the array scr
@@ -436,20 +458,43 @@ EiMOS::scoreLoop(int num[])
   int *error = val_p->error;
   int *score = val_p->score;
   int offset = val_p->bust_offset;
+  int(*prev_num)[3] = val_p->prev_num;
+  int debounce_count = val_p->debounce_count;
+
+  for(i = 0; i < (NSLOT == 3 ? 12 : NSLOT == 4 ? 16
+                                               : -1);
+      i++)
+  {
+    if(num[i] != prev_num[i][1])
+    {
+      prev_num[i][1] = num[i];
+      prev_num[i][2] = 0;
+    }
+    else if(prev_num[i][2] < debounce_count)
+    {
+      (prev_num[i][2]) += 1;
+    }
+    else
+    {
+      prev_num[i][0] = prev_num[i][1];
+      prev_num[i][2] = debounce_count;
+    }
+  }
+
   for(i = 0; i < 4; i++)
   {
     score[i] = 0;
     error[i] = false;
     if(NSLOT == 3)
     {
-      error[i] = num[3 * i] < 0 || num[3 * i + 1] < 0 || num[3 * i + 2] < 0;
-      score[i] = 50 * num[3 * i] + 10 * num[3 * i + 1] + 1 * num[3 * i + 2];
+      error[i] = prev_num[3 * i][0] < 0 || prev_num[3 * i + 1][0] < 0 || prev_num[3 * i + 2][0] < 0;
+      score[i] = 50 * prev_num[3 * i][0] + 10 * prev_num[3 * i + 1][0] + 1 * prev_num[3 * i + 2][0];
       score[i] -= offset;
     }
     else if(NSLOT == 4)
     {
-      error[i] = num[4 * i] < 0 || num[4 * i + 1] < 0 || num[4 * i + 2] < 0 || num[4 * i + 3] < 0;
-      score[i] = 50 * num[4 * i] + 10 * num[4 * i + 1] + 5 * num[4 * i + 2] + 1 * num[4 * i + 3];
+      error[i] = prev_num[4 * i][0] < 0 || prev_num[4 * i + 1][0] < 0 || prev_num[4 * i + 2][0] < 0 || prev_num[4 * i + 3][0] < 0;
+      score[i] = 50 * prev_num[4 * i][0] + 10 * prev_num[4 * i + 1][0] + 5 * prev_num[4 * i + 2][0] + 1 * prev_num[4 * i + 3][0];
       score[i] -= offset;
     }
   }
