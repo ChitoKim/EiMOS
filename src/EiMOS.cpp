@@ -57,8 +57,9 @@ PIN DEFAULT_PIN = {
    PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE,
    PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
-  PIN_NONE, // button_honba
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
+  PIN_NONE, // button_honba
+  {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE}, 
 #if REF_CORRECTION_DIMENTION == 1
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE}, // R_REF 1D
 #elif REF_CORRECTION_DIMENTION == 2
@@ -91,11 +92,14 @@ VAL DEFAULT_VAL = {
   {0, 0, 0, 0},
   {0, 0, 0, 0},
   {NORMAL, NORMAL, NORMAL, NORMAL},
+  {HIGH, HIGH, HIGH, HIGH},
   DEFAULT_HONBA,
   0,
   0L,
   0,
-};
+  1000,
+  -1,
+  HIGH};
 
 float VRANGE[] = {
   6.144f, 4.096f, 2.048f, 1.024f, .512f, .256f};
@@ -294,19 +298,37 @@ EiMOS::setModeButton(int btn[])
   }
 }
 void
-EiMOS::setHonbaButton(int btn)
+EiMOS::setHonbaButton(int btn[])
 {
-  // set a honba button, attached to interrupt
-  pin_p->button_honba = btn;
-  _button_honba = btn;
+  int i;
+  memcpy(pin_p->button_honba, btn, 4 * sizeof(int));
+  // _button_honba = btn;
   _honba = &(val_p->honba);
-  pinMode(btn, INPUT_PULLUP);
-  attachInterrupt(btn, _HONBA, CHANGE);
+  for(i = 0; i < 4; i++)
+  {
+    Serial.println(btn[i]);
+    pinMode(btn[i], INPUT_PULLUP);
+  }
 }
 void
 EiMOS::setDebounceCount(unsigned int count)
 {
   val_p->debounce_count = count;
+}
+void
+EiMOS::setSeatButton(int btn)
+{
+  pin_p->button_seat = btn;
+  if(btn != PIN_NONE)
+  {
+    setTotalScore(1050);
+    val_p->emptySeat = 3;
+  }
+}
+void
+EiMOS::setTotalScore(unsigned int score)
+{
+  val_p->totalScore = score;
 }
 void
 EiMOS::getScore(int scr[])
@@ -319,7 +341,11 @@ EiMOS::getScore()
 {
   return val_p->score;
 }
-
+int
+EiMOS::getTotalScore()
+{
+  return val_p->totalScore;
+}
 void
 EiMOS::getError(int err[])
 {
@@ -347,6 +373,16 @@ int
 EiMOS::getHonba()
 {
   return val_p->honba;
+}
+int
+EiMOS::getEmptySeat()
+{
+  return val_p->emptySeat;
+}
+void
+EiMOS::incrementEmptySeat()
+{
+  val_p->emptySeat = (val_p->emptySeat + 1) % 4;
 }
 int
 EiMOS::boolRead(int pin)
@@ -485,6 +521,12 @@ EiMOS::scoreLoop(int num[])
   {
     score[i] = 0;
     error[i] = false;
+
+    if(getEmptySeat() == i)
+    {
+      continue;
+    }
+
     if(NSLOT == 3)
     {
       error[i] = prev_num[3 * i][0] < 0 || prev_num[3 * i + 1][0] < 0 || prev_num[3 * i + 2][0] < 0;
@@ -500,21 +542,64 @@ EiMOS::scoreLoop(int num[])
   }
 }
 void
-EiMOS::modeLoop()
+EiMOS::buttonLoop()
 {
   int i, tmp;
+  bool mode_status, honba_status;
+  int seat_status;
   int *button_mode = pin_p->button_mode;
+  int *button_honba = pin_p->button_honba;
+  int button_seat = pin_p->button_seat;
+  bool *prev_button_seat = &(val_p->prev_button_seat);
+  bool *prev_button_honba = val_p->prev_button_honba;
   int *mode = val_p->mode;
-  if(button_mode[0] == PIN_NONE)
+
+  seat_status = button_seat != PIN_NONE ? digitalRead(button_seat) : -1;
+  // 3마 빈자리 변경
+  if(seat_status != -1)
   {
-    return;
+    if(*prev_button_seat == HIGH && seat_status == LOW)
+    {
+      *prev_button_seat = LOW;
+      incrementEmptySeat();
+    }
+    else if(*prev_button_seat == LOW && seat_status == HIGH)
+    {
+      *prev_button_seat = HIGH;
+    }
   }
+
   for(i = 0; i < 4; i++)
   {
-    tmp = mode[i];
-    mode[i] = (digitalRead(button_mode[i])) ? NORMAL : DIFF;
-    if(tmp == DIFF && mode[i] == NORMAL)
-      mode[i] = PM;
+    mode_status = digitalRead(button_mode[i]);
+    honba_status = digitalRead(button_honba[i]);
+
+    // 본장 초기화
+    if(mode_status == LOW && honba_status == LOW)
+    {
+      *_honba = 0;
+      prev_button_honba[i] = LOW;
+      break;
+    }
+    // 본장 증가
+    else if(honba_status == LOW)
+    {
+      if(prev_button_honba[i] == HIGH)
+      {
+        prev_button_honba[i] = LOW;
+        (*_honba)++;
+      }
+    }
+    else
+    {
+      // 이전 본장버튼값 설정
+      prev_button_honba[i] = HIGH;
+      // 모드 변경
+      tmp = mode[i];
+      mode[i] = mode_status ? NORMAL : DIFF;
+      if(tmp == DIFF && mode[i] == NORMAL)
+        mode[i] = PM;
+    }
   }
 }
 void
@@ -522,7 +607,8 @@ EiMOS::loop()
 {
   float RLC[16];
   int num[16];
-  modeLoop();
+
+  buttonLoop();
   mesLoop(RLC);
   numLoop(RLC, num);
   scoreLoop(num);
@@ -542,7 +628,7 @@ EiMOS::loop(int period_ms)
 void
 EiMOS::loop(float RLC[], int num[])
 {
-  modeLoop();
+  buttonLoop();
   mesLoop(RLC);
   numLoop(RLC, num);
   scoreLoop(num);

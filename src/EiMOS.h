@@ -108,8 +108,10 @@ class EiMOS
   void setPullType(int a);
   void setMesType(int a);
   void setModeButton(int a[]);
-  void setHonbaButton(int a);
+  void setHonbaButton(int a[]);
   void setDebounceCount(unsigned int count);
+  void setSeatButton(int btn);
+  void setTotalScore(unsigned int score);
   void setADCResolution(int a);
   void setExtADC(int gain, int bit, float vcc, int mode = 0);
   void setWeight(float a[]);
@@ -118,11 +120,16 @@ class EiMOS
 
   void getScore(int scr[]);
   int *getScore();
+  int getTotalScore();
   void getError(int err[]);
   int *getError();
   void getMode(int mode[]);
   int *getMode();
   int getHonba();
+
+  int getEmptySeat();
+
+  void incrementEmptySeat();
 
   int boolRead(int pin);
   uint16_t adcRead(int pin);
@@ -132,7 +139,7 @@ class EiMOS
   void mesLoop(float RLC[]);
   void numLoop(float RLC[], int num[]);
   void scoreLoop(int num[]);
-  void modeLoop();
+  void buttonLoop();
   void loop();
   void loop(int period_ms);
   void loop(float RLC[], int num[]);
