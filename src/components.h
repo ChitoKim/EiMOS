@@ -36,10 +36,11 @@ typedef struct PIN
   // handles gpio pins and measurement parameters
   ADS1X15 *ext_adc[4];
   int extADCMode;
-  int charge_pin[16];    // pins determine to charge/discharge capacitors
-  int analog_pin[16];    // analog pins measuring voltages
-  int button_mode[4];    // button pin controlling the display modes(INPUT_PULLUP)
-  int button_honba;      // button pin controlling the honbas(INPUT_PULLUP)
+  int charge_pin[16];  // pins determine to charge/discharge capacitors
+  int analog_pin[16];  // analog pins measuring voltages
+  int button_mode[4];  // button pin controlling the display modes(INPUT_PULLUP)
+  int button_honba[4]; // button pin controlling the honbas(INPUT_PULLUP)
+  int button_seat;
   float RLC_per_unit[4]; // resistor/capacitor value per stick
 #if REF_CORRECTION_DIMENTION == 1
   float R_REF[4]; // reference resistor used to divide voltages (1 dimention)
@@ -71,9 +72,13 @@ typedef struct VAL
   int score[4];
   int error[4]; // checks if the sticks are in the right places; if error 1, if not 0
   int mode[4];  // display mode of the scores : NORMAL, DIFF(score difference), PM(+/-)
+  bool prev_button_honba[4];
   int honba;
   int bust_offset; // dealing with the 10k busting sticks; subtracts the offset from players' scores
   unsigned long lastTime;
   unsigned int debounce_count;
+  unsigned int totalScore;
+  int emptySeat;
+  bool prev_button_seat;
 } VAL;
 #endif
