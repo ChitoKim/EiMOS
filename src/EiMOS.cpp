@@ -614,19 +614,19 @@ EiMOS::hasParRes(float f)
 float
 EiMOS::adcToCap(unsigned long t, uint16_t adc, float r_ref, float c_unit, float r_par = PIN_NONE)
 {
-//calculate capacitance using charge time and capacitor voltage
+  // calculate capacitance using charge time and capacitor voltage
   float k = 0;
   float alpha = 1;
   float vRatio = (float) adc / (float) env_p->ADC_MAX;
   int i;
-  
+
   if(r_par < 0)
   {
-    return - (float) t / r_ref / log(1.0f - vRatio);
+    return -(float) t / r_ref / log(1.0f - vRatio);
   }
   for(i = 0; i < 50; i++)
   {
-    k = - ((float) t) / (alpha * r_ref * c_unit * log(1.0f - vRatio / alpha));
+    k = -((float) t) / (alpha * r_ref * c_unit * log(1.0f - vRatio / alpha));
     alpha = r_par / (k * r_ref + r_par);
   }
   return k * c_unit;
