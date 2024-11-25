@@ -510,7 +510,7 @@ EiMOS::mesRLC(int slot_num)
   int dig_val;
   float RLC_unit = (pin_p->RLC_per_unit)[slot_num % NSLOT];
   float r_ref = (pin_p->R_REF)[slot_num % NSLOT];
-  float r_par = (pin_p->R_REF)[slot_num % NSLOT];
+  float r_par = (pin_p->R_PAR)[slot_num % NSLOT];
   float RC;
   unsigned long t, tf, dt, discharge_t;
   switch(mes_type)
@@ -535,7 +535,7 @@ EiMOS::mesRLC(int slot_num)
       } while(!dig_val && dt < 1000000L); // measure time until charged
       pinMode(apin, INPUT);
       adc = adcRead(apin);
-      RC = adcToCap(dt, adc, r_ref); // read capacitor voltage and calculate capacitance
+      RC = adcToCap(dt, adc, r_ref, RLC_unit, r_par); // read capacitor voltage and calculate capacitance
       discharge_t = 5L * dt / 1000L;
       if(pull_type == INPUT_PULLUP)
       {
@@ -577,10 +577,6 @@ EiMOS::RLCToNum(float RLC, int slot_num)
       break;
     case CAP:
       ratio = RLC / RLC_unit;
-      if(hasParRes(r_par))
-      {
-        ratio = correctCap(ratio, r_par, r_ref);
-      }
       num = (int) ratio;
       if(num == 0 && ratio > 0.8f)
       {
@@ -616,19 +612,24 @@ EiMOS::hasParRes(float f)
   // return false because by default parres equals to PIN_NONE
 }
 float
-EiMOS::adcToCap(unsigned long t, uint16_t adc, float r_ref)
+EiMOS::adcToCap(unsigned long t, uint16_t adc, float r_ref, float c_unit, float r_par = PIN_NONE)
 {
-  // calculate capacitance using charge time and capacitor voltage
-  return -(float) t / r_ref / log(1.0f - (float) adc / (float) env_p->ADC_MAX);
-}
-float
-EiMOS::correctCap(float ratio, float r_par, float r_ref)
-{
-  // corrects the influence of resistance parallel to a capacitor
-  // example : CENTURY_GOLD 5k stick has a 1M parallel resistance
-  // needs experiments
-  float RHO = r_par / 2.0f / r_ref;
-  return (sqrt(RHO * RHO + 2.0f * RHO * ratio) - RHO);
+//calculate capacitance using charge time and capacitor voltage
+  float k = 0;
+  float alpha = 1;
+  float vRatio = (float) adc / (float) env_p->ADC_MAX;
+  int i;
+  
+  if(r_par < 0)
+  {
+    return - (float) t / r_ref / log(1.0f - vRatio);
+  }
+  for(i = 0; i < 50; i++)
+  {
+    k = - ((float) t) / (alpha * r_ref * c_unit * log(1.0f - vRatio / alpha));
+    alpha = r_par / (k * r_ref + r_par);
+  }
+  return k * c_unit;
 }
 void
 EiMOS::discharge(int cpin, int apin)
