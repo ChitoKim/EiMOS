@@ -1,37 +1,20 @@
 /*
-  Special Thanks to Mahjong
+Special Thanks to Mahjong
 
-  EiMOS Library - EiMOS.cpp
-  # Formerly known as mahjongAsst
-  # Renamed June 6, 2024
+EiMOS Library - EiMOS.cpp
+Formerly known as mahjongAsst
+Renamed June 6, 2024
 
-  A Library for legacy scoring system of Japanese mahjong tables.
-  Legacy mahjong scorers implement special score sticks containing electrical elements such as R, L, or C.
-  This library measures parallel resistances/capacitances of stack-piled score sticks,
-  and convert the values into actual scores of 4 mahjong players.
+A Library for legacy scoring system of Japanese mahjong tables.
+Legacy mahjong scorers implement special score sticks containing electrical elements such as R, L, or C.
+This library measures parallel resistances/capacitances of stack-piled score sticks,
+and convert the values into actual scores of 4 mahjong players.
 
- *  Copyright (c) 2023, Chito Kim
- *  All rights reserved.
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+Copyright (c) 2023, Chito Kim
+All rights reserved.
 
-  Codes for capacitance measurement is based on a guide of Circuit Basics,
-  and library "arduino-capacitor" written by Jonathan Nethercott.
-  https://www.circuitbasics.com/how-to-make-an-arduino-capacitance-meter/
-  The core idea of using internal pull-ups and capacitance calculation through
-  logarithm is first designed by Jonathan Nethercott.
-  https://github.com/codewrite/arduino-capacitor
+Codes for capacitance measurement is based on an example code of Jonathan Nethercott.
+https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
 */
 #include "EiMOS.h"
 #include <Arduino.h>
