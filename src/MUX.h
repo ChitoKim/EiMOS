@@ -1,10 +1,10 @@
 /*
- MUX.h
- A library that controlls the switching of an MUX.
+MUX.h
+A library that controlls the switching of an MUX.
 
- * Copyright (c) 2023, Chito Kim
- * All rights reserved.
- */
+Copyright (c) 2023, Chito Kim
+All rights reserved.
+*/
 
 #ifndef _MUX_H
 #define _MUX_H

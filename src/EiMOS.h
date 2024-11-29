@@ -1,20 +1,20 @@
 /*
- Special Thanks to Mahjong
+Special Thanks to Mahjong
 
- EiMOS Library - EiMOS.h
- * Formerly known as mahjongAsst
- * Renamed 6 June, 2024
+EiMOS Library - EiMOS.h
+Formerly known as mahjongAsst
+Renamed 6 June, 2024
 
- A Library for legacy scoring system of Japanese mahjong tables.
- Legacy mahjong scorers implement special score sticks containing electrical elements such as R, L, or C.
- This library measures parallel resistances/capacitances of stack-piled score sticks,
- and convert the values into actual scores of 4 mahjong players.
+A Library for legacy scoring system of Japanese mahjong tables.
+Legacy mahjong scorers implement special score sticks containing electrical elements such as R, L, or C.
+This library measures parallel resistances/capacitances of stack-piled score sticks,
+and convert the values into actual scores of 4 mahjong players.
 
- * Copyright (c) 2023, Chito Kim
- * All rights reserved.
+Copyright (c) 2023, Chito Kim
+All rights reserved.
 
-  Codes for capacitance measurement is based on an example code of Jonathan Nethercott.
-  https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
+Codes for capacitance measurement is based on an example code of Jonathan Nethercott.
+https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
 */
 
 #ifndef _MAHJONGASST_H

@@ -1,10 +1,10 @@
 /*
- MUX.cpp
- A library that controlls the switching of an MUX.
+MUX.cpp
+A library that controlls the switching of an MUX.
 
- * Copyright (c) 2023, Chito Kim
- * All rights reserved.
- */
+Copyright (c) 2023, Chito Kim
+All rights reserved.
+*/
 
 #include "MUX.h"
 #include <Arduino.h>

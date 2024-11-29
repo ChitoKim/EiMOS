@@ -1,11 +1,11 @@
 /*
- components.h
- A library that handles the parameters of mahjong scoring,
- into three different structs : ENV, PIN, VAL
+components.h
+A library that handles the parameters of mahjong scoring,
+into three different structs : ENV, PIN, VAL
 
- * Copyright (c) 2023, Chito Kim
- * All rights reserved.
- */
+Copyright (c) 2023, Chito Kim
+All rights reserved.
+*/
 #include "ADS1X15.h"
 #ifndef _COMPONENTS_H
 #define _COMPONENTS_H
