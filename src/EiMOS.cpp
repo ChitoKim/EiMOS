@@ -20,8 +20,8 @@ https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
 #include <Arduino.h>
 
 #define EXTADCNUM() ((pin_p->ext_adc[2] == nullptr) ? 1 : ((pin_p->ext_adc[3] == nullptr) ? 3 : 4)) // calculate number of adcs
-#define EXTADCNO(x) (EXTADCNUM() == 1) ? 0 : x / EXTADCNUM()                                        // calculate which adc to use
-#define EXTADCSLOT(x) (EXTADCNUM() == 1) ? 0 : x % EXTADCNUM()                                      // calculate which slot to use
+#define EXTADCNO(x, y) (EXTADCNUM() == 1) ? 0 : ((x) / (y))                                         // calculate which adc to use
+#define EXTADCSLOT(x, y) (EXTADCNUM() == 1) ? 0 : ((x) % (y))                                       // calculate which slot to use
 
 volatile int _button_honba = PIN_NONE;
 volatile int *_honba = nullptr;
@@ -40,13 +40,49 @@ PIN DEFAULT_PIN = {
    PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE,
    PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
-  PIN_NONE,
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
+  PIN_NONE, // button_honba
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
-  {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
-  {0.3f, 0.3f, 0.3f, 0.3f}};
+#if REF_CORRECTION_DIMENTION == 1
+  {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE}, // R_REF 1D
+#elif REF_CORRECTION_DIMENTION == 2
+  {{PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
+   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
+   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
+   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE}}, // R_REF 2D
+#endif
+  {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE}, // R_PAR
+#if REF_CORRECTION_DIMENTION == 1
+  {0.3f, 0.3f, 0.3f, 0.3f} // weight 1D
+#elif REF_CORRECTION_DIMENTION == 2
+  {{0.3f, 0.3f, 0.3f, 0.3f},
+   {0.3f, 0.3f, 0.3f, 0.3f},
+   {0.3f, 0.3f, 0.3f, 0.3f},
+   {0.3f, 0.3f, 0.3f, 0.3f}} // weight 2D
+#endif
+};
 
-VAL DEFAULT_VAL = {{0, 0, 0, 0}, {0, 0, 0, 0}, {NORMAL, NORMAL, NORMAL, NORMAL}, DEFAULT_HONBA, 0, 0L};
+VAL DEFAULT_VAL = {
+  {{
+     0,
+   },
+   {
+     0,
+   },
+   {
+     0,
+   }},
+  {0, 0, 0, 0},
+  {0, 0, 0, 0},
+  {NORMAL, NORMAL, NORMAL, NORMAL},
+  {HIGH, HIGH, HIGH, HIGH},
+  DEFAULT_HONBA,
+  0,
+  0L,
+  0,
+  1000,
+  -1,
+  HIGH};
 
 float VRANGE[] = {
   6.144f, 4.096f, 2.048f, 1.024f, .512f, .256f};
@@ -110,6 +146,13 @@ EiMOS::EiMOS(ADS1X15 *ext_adc[], float v_unit[], float ref[])
   memcpy(pin_p->ext_adc, ext_adc, 4 * sizeof(ADS1X15 *));
   memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float));
+}
+EiMOS::EiMOS(ADS1X15 *ext_adc[], float v_unit[], float ref[][4])
+    : EiMOS(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+{
+  memcpy(pin_p->ext_adc, ext_adc, 4 * sizeof(ADS1X15 *));
+  memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
+  memcpy(pin_p->R_REF, ref, 16 * sizeof(float));
 }
 MUX *
 EiMOS::getMUX()
@@ -218,6 +261,11 @@ EiMOS::setWeight(float weight[])
   memcpy(pin_p->weight, weight, 4 * sizeof(int));
 }
 void
+EiMOS::setWeight(float weight[][4])
+{
+  memcpy(pin_p->weight, weight, 16 * sizeof(int));
+}
+void
 EiMOS::setOffset(int offset)
 {
   val_p->bust_offset = offset;
@@ -233,14 +281,37 @@ EiMOS::setModeButton(int btn[])
   }
 }
 void
-EiMOS::setHonbaButton(int btn)
+EiMOS::setHonbaButton(int btn[])
 {
-  // set a honba button, attached to interrupt
-  pin_p->button_honba = btn;
-  _button_honba = btn;
+  int i;
+  memcpy(pin_p->button_honba, btn, 4 * sizeof(int));
+  // _button_honba = btn;
   _honba = &(val_p->honba);
-  pinMode(btn, INPUT_PULLUP);
-  attachInterrupt(btn, _HONBA, CHANGE);
+  for(i = 0; i < 4; i++)
+  {
+    Serial.println(btn[i]);
+    pinMode(btn[i], INPUT_PULLUP);
+  }
+}
+void
+EiMOS::setDebounceCount(unsigned int count)
+{
+  val_p->debounce_count = count;
+}
+void
+EiMOS::setSeatButton(int btn)
+{
+  pin_p->button_seat = btn;
+  if(btn != PIN_NONE)
+  {
+    setTotalScore(1050);
+    val_p->emptySeat = 3;
+  }
+}
+void
+EiMOS::setTotalScore(unsigned int score)
+{
+  val_p->totalScore = score;
 }
 void
 EiMOS::getScore(int scr[])
@@ -253,7 +324,11 @@ EiMOS::getScore()
 {
   return val_p->score;
 }
-
+int
+EiMOS::getTotalScore()
+{
+  return val_p->totalScore;
+}
 void
 EiMOS::getError(int err[])
 {
@@ -281,6 +356,16 @@ int
 EiMOS::getHonba()
 {
   return val_p->honba;
+}
+int
+EiMOS::getEmptySeat()
+{
+  return val_p->emptySeat;
+}
+void
+EiMOS::incrementEmptySeat()
+{
+  val_p->emptySeat = (val_p->emptySeat + 1) % 4;
 }
 int
 EiMOS::boolRead(int pin)
@@ -318,8 +403,9 @@ EiMOS::extADCRead(int slot_num)
   uint16_t adc;
   int pull_type = env_p->pull_type;
   int ADC_MAX = env_p->ADC_MAX;
-  int no = EXTADCNO(slot_num);
-  int slot = EXTADCSLOT(slot_num);
+  int NSLOT = env_p->NSLOT;
+  int no = EXTADCNO(slot_num, NSLOT);
+  int slot = EXTADCSLOT(slot_num, NSLOT);
 
   ADS1X15 *ADS = pin_p->ext_adc[no];
   adc = ADS->readADC(slot);
@@ -358,12 +444,28 @@ EiMOS::numLoop(float RLC[], int num[])
   int i;
   for(i = 0; i < env_p->NUMPIN; i++)
   {
-    num[i] = 0;
-    num[i] = RLCToNum(RLC[i], i);
-    if((i % env_p->NSLOT) < 2)
-      num[i] = (num[i] > MAXSTICK) ? -1 : num[i];
-    else
-      num[i] = (num[i] > MAXSTICK_100P) ? -1 : num[i];
+    num[i] = max(0, RLCToNum(RLC[i], i));
+    switch(i % env_p->NSLOT)
+    {
+      case 0:
+        num[i] = min(MAXSTICK_10000P, num[i]);
+        break;
+
+      case 1:
+        num[i] = min(MAXSTICK_1000P, num[i]);
+        break;
+
+      case 2:
+        num[i] = env_p->NSLOT == 4 ? min(MAXSTICK_500P, num[i]) : min(MAXSTICK_100P_3SLOT, num[i]);
+        break;
+
+      case 3:
+        num[i] = min(MAXSTICK_100P, num[i]);
+        break;
+
+      default:
+        break;
+    }
   }
 }
 void
@@ -375,40 +477,112 @@ EiMOS::scoreLoop(int num[])
   int *error = val_p->error;
   int *score = val_p->score;
   int offset = val_p->bust_offset;
+  int(*prev_num)[3] = val_p->prev_num;
+  int debounce_count = val_p->debounce_count;
+
+  for(i = 0; i < (NSLOT == 3 ? 12 : NSLOT == 4 ? 16
+                                               : -1);
+      i++)
+  {
+    if(num[i] != prev_num[i][1])
+    {
+      prev_num[i][1] = num[i];
+      prev_num[i][2] = 0;
+    }
+    else if(prev_num[i][2] < debounce_count)
+    {
+      (prev_num[i][2]) += 1;
+    }
+    else
+    {
+      prev_num[i][0] = prev_num[i][1];
+      prev_num[i][2] = debounce_count;
+    }
+  }
+
   for(i = 0; i < 4; i++)
   {
     score[i] = 0;
     error[i] = false;
+
+    if(getEmptySeat() == i)
+    {
+      continue;
+    }
+
     if(NSLOT == 3)
     {
-      error[i] = num[3 * i] < 0 || num[3 * i + 1] < 0 || num[3 * i + 2] < 0;
-      score[i] = 50 * num[3 * i] + 10 * num[3 * i + 1] + 1 * num[3 * i + 2];
+      error[i] = prev_num[3 * i][0] < 0 || prev_num[3 * i + 1][0] < 0 || prev_num[3 * i + 2][0] < 0;
+      score[i] = 50 * prev_num[3 * i][0] + 10 * prev_num[3 * i + 1][0] + 1 * prev_num[3 * i + 2][0];
       score[i] -= offset;
     }
     else if(NSLOT == 4)
     {
-      error[i] = num[4 * i] < 0 || num[4 * i + 1] < 0 || num[4 * i + 2] < 0 || num[4 * i + 3] < 0;
-      score[i] = 50 * num[4 * i] + 10 * num[4 * i + 1] + 1 * num[4 * i + 2] + 1 * num[4 * i + 3];
+      error[i] = prev_num[4 * i][0] < 0 || prev_num[4 * i + 1][0] < 0 || prev_num[4 * i + 2][0] < 0 || prev_num[4 * i + 3][0] < 0;
+      score[i] = 50 * prev_num[4 * i][0] + 10 * prev_num[4 * i + 1][0] + 5 * prev_num[4 * i + 2][0] + 1 * prev_num[4 * i + 3][0];
       score[i] -= offset;
     }
   }
 }
 void
-EiMOS::modeLoop()
+EiMOS::buttonLoop()
 {
   int i, tmp;
+  bool mode_status, honba_status;
+  int seat_status;
   int *button_mode = pin_p->button_mode;
+  int *button_honba = pin_p->button_honba;
+  int button_seat = pin_p->button_seat;
+  bool *prev_button_seat = &(val_p->prev_button_seat);
+  bool *prev_button_honba = val_p->prev_button_honba;
   int *mode = val_p->mode;
-  if(button_mode[0] == PIN_NONE)
+
+  seat_status = button_seat != PIN_NONE ? digitalRead(button_seat) : -1;
+  // 3마 빈자리 변경
+  if(seat_status != -1)
   {
-    return;
+    if(*prev_button_seat == HIGH && seat_status == LOW)
+    {
+      *prev_button_seat = LOW;
+      incrementEmptySeat();
+    }
+    else if(*prev_button_seat == LOW && seat_status == HIGH)
+    {
+      *prev_button_seat = HIGH;
+    }
   }
+
   for(i = 0; i < 4; i++)
   {
-    tmp = mode[i];
-    mode[i] = (digitalRead(button_mode[i])) ? NORMAL : DIFF;
-    if(tmp == DIFF && mode[i] == NORMAL)
-      mode[i] = PM;
+    mode_status = digitalRead(button_mode[i]);
+    honba_status = digitalRead(button_honba[i]);
+
+    // 본장 초기화
+    if(mode_status == LOW && honba_status == LOW)
+    {
+      *_honba = 0;
+      prev_button_honba[i] = LOW;
+      break;
+    }
+    // 본장 증가
+    else if(honba_status == LOW)
+    {
+      if(prev_button_honba[i] == HIGH)
+      {
+        prev_button_honba[i] = LOW;
+        (*_honba)++;
+      }
+    }
+    else
+    {
+      // 이전 본장버튼값 설정
+      prev_button_honba[i] = HIGH;
+      // 모드 변경
+      tmp = mode[i];
+      mode[i] = mode_status ? NORMAL : DIFF;
+      if(tmp == DIFF && mode[i] == NORMAL)
+        mode[i] = PM;
+    }
   }
 }
 void
@@ -416,7 +590,8 @@ EiMOS::loop()
 {
   float RLC[16];
   int num[16];
-  modeLoop();
+
+  buttonLoop();
   mesLoop(RLC);
   numLoop(RLC, num);
   scoreLoop(num);
@@ -436,7 +611,7 @@ EiMOS::loop(int period_ms)
 void
 EiMOS::loop(float RLC[], int num[])
 {
-  modeLoop();
+  buttonLoop();
   mesLoop(RLC);
   numLoop(RLC, num);
   scoreLoop(num);
@@ -492,7 +667,11 @@ EiMOS::mesRLC(int slot_num)
   uint16_t adc;
   int dig_val;
   float RLC_unit = (pin_p->RLC_per_unit)[slot_num % NSLOT];
+#if REF_CORRECTION_DIMENTION == 1
   float r_ref = (pin_p->R_REF)[slot_num % NSLOT];
+#elif REF_CORRECTION_DIMENTION == 2
+  float r_ref = (pin_p->R_REF)[slot_num / NSLOT][slot_num % NSLOT];
+#endif
   float r_par = (pin_p->R_PAR)[slot_num % NSLOT];
   float RC;
   unsigned long t, tf, dt, discharge_t;
@@ -544,16 +723,26 @@ EiMOS::RLCToNum(float RLC, int slot_num)
   int i = 0, num = 0;
   int NSLOT = env_p->NSLOT;
   float ratio = -2.0f;
+#if REF_CORRECTION_DIMENTION == 1
   float weight = (pin_p->weight)[slot_num % NSLOT];
+#elif REF_CORRECTION_DIMENTION == 2
+  float weight = (pin_p->weight)[slot_num / NSLOT][slot_num % NSLOT];
+#endif
+
   float RLC_unit = (pin_p->RLC_per_unit)[slot_num % NSLOT];
   float r_par = (pin_p->R_PAR)[slot_num % NSLOT];
+#if REF_CORRECTION_DIMENTION == 1
   float r_ref = (pin_p->R_REF)[slot_num % NSLOT];
+#elif REF_CORRECTION_DIMENTION == 2
+  float r_ref = (pin_p->R_REF)[slot_num / NSLOT][slot_num % NSLOT];
+#endif
+
   switch(env_p->mes_type)
   {
     case RES:
       ratio = RLC_unit / RLC;
       num = (int) (ratio + weight);
-      if(ratio < 0.8f)
+      if(slot_num % NSLOT < 2 && ratio < 0.8f || ratio < 0.f)
       {
         num = 0;
       }

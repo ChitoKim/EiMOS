@@ -24,6 +24,8 @@ https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
 #define ADC_RESOLUTION_MUTABLE
 #endif
 
+#define REF_CORRECTION_DIMENTION 2
+
 #include "ADS1X15.h"
 #include "MUX.h"
 #include "components.h"
@@ -33,7 +35,11 @@ https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
 #define DEFAULT_NUMPIN 16
 #define DEFAULT_HONBA 0
 #define MAXSTICK 50
-#define MAXSTICK_100P 50
+#define MAXSTICK_10000P 16
+#define MAXSTICK_1000P 16
+#define MAXSTICK_500P 4
+#define MAXSTICK_100P 20
+#define MAXSTICK_100P_3SLOT 40
 
 #define RES 0
 #define CAP 1
@@ -71,6 +77,7 @@ class EiMOS
   EiMOS(int analog[], float v_unit[], float ref[]);
   EiMOS(int charge[], ADS1X15 *ext_adc[], float v_unit[], float ref[]);
   EiMOS(ADS1X15 *ext_adc[], float v_unit[], float ref[]);
+  EiMOS(ADS1X15 *ext_adc[], float v_unit[], float ref[][4]);
   MUX *getMUX();
   ENV *getENV();
   PIN *getPIN();
@@ -84,19 +91,28 @@ class EiMOS
   void setPullType(int a);
   void setMesType(int a);
   void setModeButton(int a[]);
-  void setHonbaButton(int a);
+  void setHonbaButton(int a[]);
+  void setDebounceCount(unsigned int count);
+  void setSeatButton(int btn);
+  void setTotalScore(unsigned int score);
   void setADCResolution(int a);
   void setExtADC(int gain, int bit, float vcc, int mode = 0);
   void setWeight(float a[]);
+  void setWeight(float weight[][4]);
   void setOffset(int a);
 
   void getScore(int scr[]);
   int *getScore();
+  int getTotalScore();
   void getError(int err[]);
   int *getError();
   void getMode(int mode[]);
   int *getMode();
   int getHonba();
+
+  int getEmptySeat();
+
+  void incrementEmptySeat();
 
   int boolRead(int pin);
   uint16_t adcRead(int pin);
@@ -106,7 +122,7 @@ class EiMOS
   void mesLoop(float RLC[]);
   void numLoop(float RLC[], int num[]);
   void scoreLoop(int num[]);
-  void modeLoop();
+  void buttonLoop();
   void loop();
   void loop(int period_ms);
   void loop(float RLC[], int num[]);
