@@ -372,8 +372,8 @@ EiMOS_RLC::scoreLoop(int num[])
   // finally outputing the score
   int i;
   int NSLOT = env_p->NSLOT;
-  int *error = val_p->error;
-  int *score = val_p->score;
+  int *error = val_p->results.error;
+  int *score = val_p->results.score;
   int offset = val_p->bust_offset;
   for(i = 0; i < 4; i++)
   {
