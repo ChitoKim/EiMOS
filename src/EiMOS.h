@@ -5,7 +5,7 @@
 // Formerly known as mahjongAsst
 // Renamed 6 June, 2024
 
-//Two interface classes; EiMOS_MEAS for measurements and EIMOS_DP for displays
+// Two interface classes; EiMOS_MEAS for measurements and EIMOS_DP for displays
 
 #define NORMAL 1
 #define DIFF 0
@@ -22,14 +22,18 @@ typedef struct Results
 } Results;
 class EiMOS_MEAS
 {
-  public:
-  EiMOS_MEAS() {}
+ public:
+  EiMOS_MEAS()
+  {
+  }
   virtual void measure();
 };
 class EiMOS_DP
 {
-  public:
-  EiMOS_DP() {}
+ public:
+  EiMOS_DP()
+  {
+  }
   virtual void show(Results *results);
 };
 #endif
