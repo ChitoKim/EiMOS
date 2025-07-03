@@ -63,6 +63,7 @@ PIN DEFAULT_PIN = {
 };
 
 VAL DEFAULT_VAL = {
+  {{0,}, {0,}, {0,}, 0, 1000},
   {{
      0,
    },
@@ -72,16 +73,10 @@ VAL DEFAULT_VAL = {
    {
      0,
    }},
-  {0, 0, 0, 0},
-  {0, 0, 0, 0},
-  {NORMAL, NORMAL, NORMAL, NORMAL},
   {HIGH, HIGH, HIGH, HIGH},
-  DEFAULT_HONBA,
   0,
   0L,
-  0,
   1000,
-  -1,
   HIGH};
 
 float VRANGE[] = {
@@ -291,7 +286,7 @@ EiMOS_RLC::setHonbaButton(int btn[])
   int i;
   memcpy(pin_p->button_honba, btn, 4 * sizeof(int));
   // _button_honba = btn;
-  _honba = &(val_p->honba);
+  _honba = &(val_p->results.honba);
   for(i = 0; i < 4; i++)
   {
     Serial.println(btn[i]);
@@ -310,67 +305,23 @@ EiMOS_RLC::setSeatButton(int btn)
   if(btn != PIN_NONE)
   {
     setTotalScore(1050);
-    val_p->emptySeat = 3;
+    val_p->results.emptySeat = 3;
   }
 }
 void
 EiMOS_RLC::setTotalScore(unsigned int score)
 {
-  val_p->totalScore = score;
+  val_p->results.totalScore = score;
 }
-void
-EiMOS_RLC::getScore(int scr[])
+Results *
+EiMOS_RLC::getResults()
 {
-  // copy the scores to the array scr
-  memcpy(scr, val_p->score, 4 * sizeof(int));
-}
-int *
-EiMOS_RLC::getScore()
-{
-  return val_p->score;
-}
-int
-EiMOS_RLC::getTotalScore()
-{
-  return val_p->totalScore;
-}
-void
-EiMOS_RLC::getError(int err[])
-{
-  // copy the errors to the array scr
-  int i;
-  int *error = val_p->error;
-  memcpy(err, val_p->error, 4 * sizeof(int));
-}
-int *
-EiMOS_RLC::getError()
-{
-  return val_p->error;
-}
-void
-EiMOS_RLC::getMode(int mode[])
-{
-  memcpy(mode, val_p->mode, 4 * sizeof(int));
-}
-int *
-EiMOS_RLC::getMode()
-{
-  return val_p->mode;
-}
-int
-EiMOS_RLC::getHonba()
-{
-  return val_p->honba;
-}
-int
-EiMOS_RLC::getEmptySeat()
-{
-  return val_p->emptySeat;
+  return &(val_p->results);
 }
 void
 EiMOS_RLC::incrementEmptySeat()
 {
-  val_p->emptySeat = (val_p->emptySeat + 1) % 4;
+  val_p->results.emptySeat = (val_p->results.emptySeat + 1) % 4;
 }
 int
 EiMOS_RLC::boolRead(int pin)
@@ -479,8 +430,8 @@ EiMOS_RLC::scoreLoop(int num[])
   // finally outputing the score
   int i;
   int NSLOT = env_p->NSLOT;
-  int *error = val_p->error;
-  int *score = val_p->score;
+  int *error = val_p->results.error;
+  int *score = val_p->results.score;
   int offset = val_p->bust_offset;
   int(*prev_num)[3] = val_p->prev_num;
   int debounce_count = val_p->debounce_count;
@@ -510,7 +461,7 @@ EiMOS_RLC::scoreLoop(int num[])
     score[i] = 0;
     error[i] = false;
 
-    if(getEmptySeat() == i)
+    if(val_p->results.emptySeat == i)
     {
       continue;
     }
@@ -540,7 +491,7 @@ EiMOS_RLC::buttonLoop()
   int button_seat = pin_p->button_seat;
   bool *prev_button_seat = &(val_p->prev_button_seat);
   bool *prev_button_honba = val_p->prev_button_honba;
-  int *mode = val_p->mode;
+  int *mode = val_p->results.mode;
 
   seat_status = button_seat != PIN_NONE ? digitalRead(button_seat) : -1;
   // 3마 빈자리 변경

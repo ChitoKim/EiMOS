@@ -56,12 +56,6 @@ https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
 // INPUT_PULLUP
 
 #define MAXTIME sizeof(unsigned long)
-
-#define NORMAL 1
-#define DIFF 0
-#define PM 2
-#define SUM 1000
-
 class EiMOS_RLC : public EiMOS_MEAS
 {
  private:
@@ -103,17 +97,7 @@ class EiMOS_RLC : public EiMOS_MEAS
   void setWeight(float weight[][4]);
   void setOffset(int a);
 
-  void getScore(int scr[]);
-  int *getScore();
-  int getTotalScore();
-  void getError(int err[]);
-  int *getError();
-  void getMode(int mode[]);
-  int *getMode();
-  int getHonba();
-
-  int getEmptySeat();
-
+  Results* getResults();
   void incrementEmptySeat();
 
   int boolRead(int pin);

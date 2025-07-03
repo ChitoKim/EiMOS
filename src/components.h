@@ -55,17 +55,12 @@ typedef struct VAL
    * - [2]: A count of how many times the value at index 1 has appeared consecutively.
    *        When this count exceeds debounce_count, the value at index 0 is updated to the value at index 1.
    */
+  Results results;
   int prev_num[16][3];
-  int score[4];
-  int error[4]; // checks if the sticks are in the right places; if error 1, if not 0
-  int mode[4];  // display mode of the scores : NORMAL, DIFF(score difference), PM(+/-)
   bool prev_button_honba[4];
-  int honba;
   int bust_offset; // dealing with the 10k busting sticks; subtracts the offset from players' scores
   unsigned long lastTime;
   unsigned int debounce_count;
-  unsigned int totalScore;
-  int emptySeat;
   bool prev_button_seat;
 } VAL;
 #endif
