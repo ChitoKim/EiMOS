@@ -26,8 +26,8 @@ https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
 
 #define REF_CORRECTION_DIMENTION 2
 
-#include "EiMOS.h"
 #include "ADS1X15.h"
+#include "EiMOS.h"
 #include "MUX.h"
 #include "components.h"
 
@@ -97,7 +97,7 @@ class EiMOS_RLC : public EiMOS_MEAS
   void setWeight(float weight[][4]);
   void setOffset(int a);
 
-  Results* getResults();
+  Results *getResults();
   void incrementEmptySeat();
 
   int boolRead(int pin);

@@ -42,7 +42,7 @@ PIN DEFAULT_PIN = {
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
   PIN_NONE, // button_honba
-  {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE}, 
+  {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
 #if REF_CORRECTION_DIMENTION == 1
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE}, // R_REF 1D
 #elif REF_CORRECTION_DIMENTION == 2
@@ -63,7 +63,17 @@ PIN DEFAULT_PIN = {
 };
 
 VAL DEFAULT_VAL = {
-  {{0,}, {0,}, {0,}, 0, 1000},
+  {{
+     0,
+   },
+   {
+     0,
+   },
+   {
+     0,
+   },
+   0,
+   1000},
   {{
      0,
    },
@@ -433,7 +443,7 @@ EiMOS_RLC::scoreLoop(int num[])
   int *error = val_p->results.error;
   int *score = val_p->results.score;
   int offset = val_p->bust_offset;
-  int(*prev_num)[3] = val_p->prev_num;
+  int (*prev_num)[3] = val_p->prev_num;
   int debounce_count = val_p->debounce_count;
 
   for(i = 0; i < (NSLOT == 3 ? 12 : NSLOT == 4 ? 16
