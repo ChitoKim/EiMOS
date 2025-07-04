@@ -35,5 +35,6 @@ class EiMOS_DP
   {
   }
   virtual void show(Results *results);
+  virtual void show(const char *str);
 };
 #endif
