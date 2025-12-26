@@ -70,10 +70,11 @@ VAL DEFAULT_VAL = {
      0,
    },
    {
-     0,
+     NORMAL, NORMAL, NORMAL, NORMAL
    },
    0,
-   1000},
+   1000,
+   -1},
   {{
      0,
    },
