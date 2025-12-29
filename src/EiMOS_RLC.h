@@ -24,7 +24,7 @@ https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
 #define ADC_RESOLUTION_MUTABLE
 #endif
 
-#define REF_CORRECTION_DIMENTION 2
+#define REF_CORRECTION_DIMENTION 1
 
 #include "ADS1X15.h"
 #include "EiMOS.h"
