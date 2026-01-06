@@ -37,6 +37,7 @@ https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
 
 #define RES 0
 #define CAP 1
+#define ACT 2
 #define PIN_NONE -1
 
 #ifndef PULLUP
@@ -128,6 +129,8 @@ class EiMOS
   void discharge(int cpin, int apin);
   void charge(int cpin);
   //
+  // active resistance specific
+  void setActiveRes(int sw[], float vbias[], float vcc);
 };
 void _HONBA();
 #endif

@@ -44,7 +44,9 @@ PIN DEFAULT_PIN = {
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
-  {0.3f, 0.3f, 0.3f, 0.3f}};
+  {0.3f, 0.3f, 0.3f, 0.3f},
+  {0},
+  {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE}};
 
 VAL DEFAULT_VAL = {{0, 0, 0, 0}, {0, 0, 0, 0}, {NORMAL, NORMAL, NORMAL, NORMAL}, DEFAULT_HONBA, 0, 0L};
 
@@ -475,6 +477,15 @@ EiMOS::prepMes(int slot_num)
       slotSelect(slot_num);
       discharge(cpin, apin);
       break;
+    case ACT:
+      slotSelect(slot_num);
+      for(int i = 0; i < env_p->NSLOT; i++)
+      {
+        digitalWrite((pin_p->feedbackSW)[i], LOW);
+      }
+      digitalWrite((pin_p->feedbackSW)[slot_num % env_p->NSLOT], HIGH);
+      delay(1);
+      break;
     default:
       break;
   }
@@ -494,6 +505,7 @@ EiMOS::mesRLC(int slot_num)
   float RLC_unit = (pin_p->RLC_per_unit)[slot_num % NSLOT];
   float r_ref = (pin_p->R_REF)[slot_num % NSLOT];
   float r_par = (pin_p->R_REF)[slot_num % NSLOT];
+  uint32_t adc_bias = (pin_p->adc_bias)[slot_num % NSLOT];
   float RC;
   unsigned long t, tf, dt, discharge_t;
   switch(mes_type)
@@ -532,6 +544,14 @@ EiMOS::mesRLC(int slot_num)
         discharge(cpin, apin);
       }
       break;
+    case ACT:
+      // active resistance measurement using opamp. 
+      // the function returns conductance(milli-Siemens).
+      delay(1);
+      pinMode(apin, INPUT);
+      adc = (pin_p->ext_adc[0] == nullptr) ? adcRead(apin) : extADCRead(slot_num);
+      RC = (adc <= adc_bias) ? 0 : (((float) adc/ (float) adc_bias - 1.0f) / r_ref);
+     break;
     default:
       return -1.0;
       break;
@@ -569,6 +589,10 @@ EiMOS::RLCToNum(float RLC, int slot_num)
       {
         num = 1;
       }
+      break;
+    case ACT:
+      ratio = RLC * RLC_unit;
+      num = (int) (ratio + .5f);
       break;
     default:
       break;
@@ -628,6 +652,17 @@ EiMOS::charge(int cpin)
 {
   pinMode(cpin, OUTPUT);
   digitalWrite(cpin, (env_p->pull_type == INPUT_PULLUP || env_p->pull_type == PULLUP) ? LOW : HIGH);
+}
+
+void
+EiMOS::setActiveRes(int sw[], float vbias[], float vcc)
+{
+  for(int i = 0; i < env_p->NSLOT; i++)
+  {
+    (pin_p->feedbackSW)[i] = sw[i];
+    pinMode((pin_p->feedbackSW)[i], OUTPUT);
+    (pin_p->adc_bias)[i] = (uint16_t) ((float) env_p->ADC_MAX * vbias[i] / vcc);
+  }
 }
 void
 _HONBA()
