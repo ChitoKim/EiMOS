@@ -47,12 +47,12 @@ PIN DEFAULT_PIN = {
   {0.3f, 0.3f, 0.3f, 0.3f}};
 
 VAL DEFAULT_VAL = {
-  {{0, 0, 0, 0}, 
-  {0, 0, 0, 0}, 
-  {NORMAL, NORMAL, NORMAL, NORMAL}, 
-  DEFAULT_HONBA,
-  1000,
-  -1},
+  {{0, 0, 0, 0},
+   {0, 0, 0, 0},
+   {NORMAL, NORMAL, NORMAL, NORMAL},
+   DEFAULT_HONBA,
+   1000,
+   -1},
   0,
   0L};
 
@@ -118,6 +118,11 @@ EiMOS_RLC::EiMOS_RLC(ADS1X15 *ext_adc[], float v_unit[], float ref[])
   memcpy(pin_p->ext_adc, ext_adc, 4 * sizeof(ADS1X15 *));
   memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float));
+}
+void
+EiMOS_RLC::measure()
+{
+  this->loop();
 }
 MUX *
 EiMOS_RLC::getMUX()

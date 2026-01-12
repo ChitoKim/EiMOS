@@ -24,10 +24,11 @@ https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
 #define ADC_RESOLUTION_MUTABLE
 #endif
 
-#include "EiMOS.h"
 #include "ADS1X15.h"
+#include "EiMOS.h"
 #include "MUX.h"
 #include "components.h"
+
 
 #define DEFAULT_ADC_MAX 1024
 #define DEFAULT_NSLOT 4
@@ -76,6 +77,7 @@ class EiMOS_RLC : public EiMOS_MEAS
   ENV *getENV();
   PIN *getPIN();
   VAL *getVAL();
+  void measure() override; 
   void setMUX4051(int a[], int b[]);
   void setMUX4067(int a[]);
   void initMUX();
