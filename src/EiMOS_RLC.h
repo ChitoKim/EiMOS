@@ -1,7 +1,7 @@
 /*
 Special Thanks to Mahjong
 
-EiMOS Library - EiMOS_RLC.h
+EiMOS Library - EiMOS.h
 Formerly known as mahjongAsst
 Renamed 6 June, 2024
 
@@ -24,10 +24,8 @@ https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
 #define ADC_RESOLUTION_MUTABLE
 #endif
 
-#define REF_CORRECTION_DIMENTION 1
-
-#include "ADS1X15.h"
 #include "EiMOS.h"
+#include "ADS1X15.h"
 #include "MUX.h"
 #include "components.h"
 
@@ -36,11 +34,7 @@ https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
 #define DEFAULT_NUMPIN 16
 #define DEFAULT_HONBA 0
 #define MAXSTICK 50
-#define MAXSTICK_10000P 16
-#define MAXSTICK_1000P 16
-#define MAXSTICK_500P 4
-#define MAXSTICK_100P 20
-#define MAXSTICK_100P_3SLOT 40
+#define MAXSTICK_100P 50
 
 #define RES 0
 #define CAP 1
@@ -56,6 +50,12 @@ https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
 // INPUT_PULLUP
 
 #define MAXTIME sizeof(unsigned long)
+
+#define NORMAL 1
+#define DIFF 0
+#define PM 2
+#define SUM 1000
+
 class EiMOS_RLC : public EiMOS_MEAS
 {
  private:
@@ -72,8 +72,6 @@ class EiMOS_RLC : public EiMOS_MEAS
   EiMOS_RLC(int analog[], float v_unit[], float ref[]);
   EiMOS_RLC(int charge[], ADS1X15 *ext_adc[], float v_unit[], float ref[]);
   EiMOS_RLC(ADS1X15 *ext_adc[], float v_unit[], float ref[]);
-  EiMOS_RLC(ADS1X15 *ext_adc[], float v_unit[], float ref[][4]);
-  void measure() override;
   MUX *getMUX();
   ENV *getENV();
   PIN *getPIN();
@@ -87,18 +85,19 @@ class EiMOS_RLC : public EiMOS_MEAS
   void setPullType(int a);
   void setMesType(int a);
   void setModeButton(int a[]);
-  void setHonbaButton(int a[]);
-  void setDebounceCount(unsigned int count);
-  void setSeatButton(int btn);
-  void setTotalScore(unsigned int score);
+  void setHonbaButton(int a);
   void setADCResolution(int a);
   void setExtADC(int gain, int bit, float vcc, int mode = 0);
   void setWeight(float a[]);
-  void setWeight(float weight[][4]);
   void setOffset(int a);
 
-  Results *getResults();
-  void incrementEmptySeat();
+  void getScore(int scr[]);
+  int *getScore();
+  void getError(int err[]);
+  int *getError();
+  void getMode(int mode[]);
+  int *getMode();
+  int getHonba();
 
   int boolRead(int pin);
   uint16_t adcRead(int pin);
@@ -108,7 +107,7 @@ class EiMOS_RLC : public EiMOS_MEAS
   void mesLoop(float RLC[]);
   void numLoop(float RLC[], int num[]);
   void scoreLoop(int num[]);
-  void buttonLoop();
+  void modeLoop();
   void loop();
   void loop(int period_ms);
   void loop(float RLC[], int num[]);
