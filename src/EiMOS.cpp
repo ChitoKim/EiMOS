@@ -597,22 +597,61 @@ EiMOS::hasParRes(float f)
 float
 EiMOS::adcToCap(unsigned long t, uint16_t adc, float r_ref, float c_unit, float r_par = PIN_NONE)
 {
-  // calculate capacitance using charge time and capacitor voltage
-  float k = 0;
-  float alpha = 1;
+  // calculate capacitance from time and adc readings
+  // if r_par exists calculate by iterations
   float vRatio = (float) adc / (float) env_p->ADC_MAX;
-  int i;
+  const float lambda = 0.5f;
+  const float tolerance = 1e-6;
 
-  if(r_par < 0)
+  // Inital Setup
+  float alpha = 1.0f;
+  float k_new = 0;
+  float k_old = 0;
+
+  // Calculate the uncorrected k (Ce factor) to be the best possible starting point (k_old)
+  float log_init_arg = 1.0f - vRatio;
+  if (log_init_arg <= 0)
   {
-    return -(float) t / r_ref / log(1.0f - vRatio);
+    // Vc is too high, log is impossible
+    return 0.0f;
   }
+  k_old = - t / (r_ref * c_unit * log(log_init_arg));
+  k_new = k_old; // Initialize k_new
+
+  int i;
+  
+  // iteration loop with convergence and stability checks
   for(i = 0; i < 50; i++)
   {
-    k = -((float) t) / (alpha * r_ref * c_unit * log(1.0f - vRatio / alpha));
-    alpha = r_par / (k * r_ref + r_par);
+    // calculate alpha from last calculated k
+    float k_used = (k_old <= 0.0) ? 1.0 : k_old;
+    float alpha_calc = r_par / (k_used * r_ref + r_par);
+
+    // damp alpha so that capacitance measurements don't diverge
+    float alpha_new = lambda * alpha_calc + (1.0f - lambda) * alpha;
+    float log_arg = 1.0f - vRatio / alpha_new;
+    
+    if(log_arg <= 0)
+    {
+      // divergence occured. return the last stable result
+      return k_old * c_unit;
+    }
+    
+    // calculate new k using the damped alpha
+    k_new  = -t / (alpha_new * r_ref * c_unit * log(log_arg));
+    
+    // check for convergence
+    if(fabs(k_new - k_old) < tolerance) 
+    {
+      break;
+    }
+    
+    // update for next iteration
+    k_old = k_new;
+    alpha = alpha_new;
   }
-  return k * c_unit;
+  
+  return k_new * c_unit;
 }
 void
 EiMOS::discharge(int cpin, int apin)
