@@ -93,6 +93,7 @@ class EiMOS_RLC : public EiMOS_MEAS
   void setWeight(float a[]);
   void setOffset(int a);
 
+  Results *getResults();
   void getScore(int scr[]);
   int *getScore();
   void getError(int err[]);

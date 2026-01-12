@@ -255,6 +255,11 @@ EiMOS_RLC::setHonbaButton(int btn)
   pinMode(btn, INPUT_PULLUP);
   attachInterrupt(btn, _HONBA, CHANGE);
 }
+Results *
+EiMOS_RLC::getResults()
+{
+  return &(val_p->results);
+}
 void
 EiMOS_RLC::getScore(int scr[])
 {
