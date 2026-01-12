@@ -46,7 +46,15 @@ PIN DEFAULT_PIN = {
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
   {0.3f, 0.3f, 0.3f, 0.3f}};
 
-VAL DEFAULT_VAL = {{0, 0, 0, 0}, {0, 0, 0, 0}, {NORMAL, NORMAL, NORMAL, NORMAL}, DEFAULT_HONBA, 0, 0L};
+VAL DEFAULT_VAL = {
+  {{0, 0, 0, 0}, 
+  {0, 0, 0, 0}, 
+  {NORMAL, NORMAL, NORMAL, NORMAL}, 
+  DEFAULT_HONBA,
+  1000,
+  -1},
+  0,
+  0L};
 
 float VRANGE[] = {
   6.144f, 4.096f, 2.048f, 1.024f, .512f, .256f};
@@ -233,12 +241,12 @@ EiMOS_RLC::setModeButton(int btn[])
   }
 }
 void
-EiMOS::setHonbaButton(int btn)
+EiMOS_RLC::setHonbaButton(int btn)
 {
   // set a honba button, attached to interrupt
   pin_p->button_honba = btn;
   _button_honba = btn;
-  _honba = &(val_p->honba);
+  _honba = &(val_p->results.honba);
   pinMode(btn, INPUT_PULLUP);
   attachInterrupt(btn, _HONBA, CHANGE);
 }
@@ -246,12 +254,12 @@ void
 EiMOS_RLC::getScore(int scr[])
 {
   // copy the scores to the array scr
-  memcpy(scr, val_p->score, 4 * sizeof(int));
+  memcpy(scr, val_p->results.score, 4 * sizeof(int));
 }
 int *
 EiMOS_RLC::getScore()
 {
-  return val_p->score;
+  return val_p->results.score;
 }
 
 void
@@ -259,28 +267,28 @@ EiMOS_RLC::getError(int err[])
 {
   // copy the errors to the array scr
   int i;
-  int *error = val_p->error;
-  memcpy(err, val_p->error, 4 * sizeof(int));
+  int *error = val_p->results.error;
+  memcpy(err, val_p->results.error, 4 * sizeof(int));
 }
 int *
 EiMOS_RLC::getError()
 {
-  return val_p->error;
+  return val_p->results.error;
 }
 void
 EiMOS_RLC::getMode(int mode[])
 {
-  memcpy(mode, val_p->mode, 4 * sizeof(int));
+  memcpy(mode, val_p->results.mode, 4 * sizeof(int));
 }
 int *
 EiMOS_RLC::getMode()
 {
-  return val_p->mode;
+  return val_p->results.mode;
 }
 int
 EiMOS_RLC::getHonba()
 {
-  return val_p->honba;
+  return val_p->results.honba;
 }
 int
 EiMOS_RLC::boolRead(int pin)
@@ -394,11 +402,11 @@ EiMOS_RLC::scoreLoop(int num[])
   }
 }
 void
-EiMOS::modeLoop()
+EiMOS_RLC::modeLoop()
 {
   int i, tmp;
   int *button_mode = pin_p->button_mode;
-  int *mode = val_p->mode;
+  int *mode = val_p->results.mode;
   if(button_mode[0] == PIN_NONE)
   {
     return;
