@@ -515,7 +515,7 @@ EiMOS::mesRLC(int slot_num)
         dig_val = boolRead(apin);
         tf = micros();
         dt = (tf > t) ? tf - t : MAXTIME - t + tf;
-      } while(!dig_val && dt < 1000000L); // measure time until charged
+      } while(!dig_val && dt < 10000L); // measure time until charged
       pinMode(apin, INPUT);
       adc = adcRead(apin);
       RC = adcToCap(dt, adc, r_ref, RLC_unit, r_par); // read capacitor voltage and calculate capacitance
@@ -590,65 +590,32 @@ float
 EiMOS::adcToCap(unsigned long t, uint16_t adc, float r_ref, float c_unit, float r_par = PIN_NONE)
 {
   // calculate capacitance from time and adc readings
-  // if r_par exists calculate by iterations
+  // if r_par exists calculate by Newton-Raphson method
   float vRatio = (float) adc / (float) env_p->ADC_MAX;
-  const float lambda = 0.5f;
-  const float tolerance = 1e-6;
-
-  // Inital Setup
+  float log_arg = 1.0f - vRatio;
+  float k = - (float) t / r_ref / c_unit / log(log_arg);
   float alpha = 1.0f;
-  float k_new = 0;
-  float k_old = 0;
-
-  // Calculate the uncorrected k (Ce factor) to be the best possible starting point (k_old)
-  float log_init_arg = 1.0f - vRatio;
-  if (log_init_arg <= 0)
-  {
-    // Vc is too high, log is impossible
-    return 0.0f;
-  }
-  k_old = - t / (r_ref * c_unit * log(log_init_arg));
-  k_new = k_old; // Initialize k_new
-
   if(!hasParRes(r_par))
   {
-    return k_old * c_unit;
+    return k * c_unit;
   }
-
-  int i;
-  
-  // iteration loop with convergence and stability checks
-  for(i = 0; i < 50; i++)
+  for(int i = 0; i < 200; i++)
   {
-    // calculate alpha from last calculated k
-    float k_used = (k_old <= 0.0) ? 1.0 : k_old;
-    float alpha_calc = r_par / (k_used * r_ref + r_par);
+    alpha = r_par / (k * r_ref + r_par);
+    alpha = max(alpha, vRatio * 1.001);
+    log_arg = 1.0f - vRatio / alpha;
+    float inv_log = 1.0f / log(log_arg);
+    float f = k + t * inv_log / (alpha * r_ref * c_unit);
+    float df_dk = 1 + t / (r_par * c_unit) * (inv_log + inv_log * inv_log * vRatio / (alpha - vRatio)); 
+    float k_delta = -f / df_dk;
+    k += k_delta;
 
-    // damp alpha so that capacitance measurements don't diverge
-    float alpha_new = lambda * alpha_calc + (1.0f - lambda) * alpha;
-    float log_arg = 1.0f - vRatio / alpha_new;
-    
-    if(log_arg <= 0)
-    {
-      // divergence occured. return the last stable result
-      return k_old * c_unit;
-    }
-    
-    // calculate new k using the damped alpha
-    k_new  = -t / (alpha_new * r_ref * c_unit * log(log_arg));
-    
-    // check for convergence
-    if(fabs(k_new - k_old) < tolerance) 
+    if(abs(k_delta) < k * 1e-3)
     {
       break;
     }
-    
-    // update for next iteration
-    k_old = k_new;
-    alpha = alpha_new;
   }
-  
-  return k_new * c_unit;
+  return k * c_unit;
 }
 void
 EiMOS::discharge(int cpin, int apin)
