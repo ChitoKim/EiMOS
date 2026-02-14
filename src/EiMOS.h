@@ -125,6 +125,7 @@ class EiMOS
   int hasParRes(float f);
   float adcToCap(unsigned long t, uint16_t adc, float r, float c_unit, float r_par);
   void discharge(int cpin, int apin);
+  void softDischarge(int cpin, int apin);
   void charge(int cpin);
   //
 };

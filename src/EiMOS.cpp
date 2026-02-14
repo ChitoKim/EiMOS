@@ -520,17 +520,9 @@ EiMOS::mesRLC(int slot_num)
       adc = adcRead(apin);
       RC = adcToCap(dt, adc, r_ref, RLC_unit, r_par); // read capacitor voltage and calculate capacitance
       discharge_t = 5L * dt / 1000L;
-      if(pull_type == INPUT_PULLUP)
-      {
-        digitalWrite(cpin, HIGH);
-        pinMode(apin, INPUT_PULLUP); // HIGH to HIGH with pullup, discharge the capacitor
-        delay(discharge_t);
-        discharge(cpin, apin);
-      }
-      else
-      {
-        discharge(cpin, apin);
-      }
+      softDischarge(cpin, apin);
+      delay(discharge_t);
+      discharge(cpin, apin);
       break;
     default:
       return -1.0;
@@ -618,6 +610,11 @@ EiMOS::adcToCap(unsigned long t, uint16_t adc, float r_ref, float c_unit, float 
   k_old = - t / (r_ref * c_unit * log(log_init_arg));
   k_new = k_old; // Initialize k_new
 
+  if(!hasParRes(r_par))
+  {
+    return k_old * c_unit;
+  }
+
   int i;
   
   // iteration loop with convergence and stability checks
@@ -660,8 +657,31 @@ EiMOS::discharge(int cpin, int apin)
   digitalWrite(cpin, LOW);
   pinMode(apin, OUTPUT);
   digitalWrite(apin, LOW);
-  while(adcRead(apin))
-    ;
+  delay(1);
+}
+void
+EiMOS::softDischarge(int cpin, int apin)
+{
+  switch(env_p->pull_type)
+  {
+    case INPUT_PULLUP:
+      pinMode(cpin, OUTPUT);
+      digitalWrite(cpin, HIGH);
+      pinMode(apin, INPUT_PULLUP); // HIGH to HIGH with pullup, discharge the capacitor
+      break;
+    case PULLUP:
+      pinMode(cpin, OUTPUT);
+      digitalWrite(cpin, HIGH);
+      pinMode(apin, INPUT);
+      break;
+    case PULLDOWN:
+      pinMode(cpin, OUTPUT);
+      digitalWrite(cpin, LOW);
+      pinMode(apin, INPUT);
+      break;
+    default:
+      break;
+  }
 }
 void
 EiMOS::charge(int cpin)
