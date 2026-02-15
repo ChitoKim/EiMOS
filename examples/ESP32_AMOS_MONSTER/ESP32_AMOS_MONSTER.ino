@@ -20,8 +20,6 @@ ADS1115 ADC3(0x49, &Wire1);
 
 ADS1X15 *adc[] = {&ADC0, &ADC1, &ADC2, &ADC3};
 EiMOS_RLC RLC(adc, RES_AMOS_MONSTER, R_REF);
-EiMOS_DP DP();
-EiMOS EM(&RLC, &DP);
 
 float weight[] = {0.3f, 0.3f, 0.3f, 0.3f};
 enum I2CPIN
