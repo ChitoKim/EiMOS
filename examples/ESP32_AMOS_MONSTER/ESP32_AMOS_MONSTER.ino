@@ -1,4 +1,4 @@
-#include <EiMOS.h>
+#include <EiMOS_RLC.h>
 int button_mode[] = {
   32, 33, 25, 26
   // 36, 39, 34, 35 are input only pins without internal pullup.
@@ -19,7 +19,7 @@ ADS1115 ADC2(0x48, &Wire1);
 ADS1115 ADC3(0x49, &Wire1);
 
 ADS1X15 *adc[] = {&ADC0, &ADC1, &ADC2, &ADC3};
-EiMOS EM(adc, RES_AMOS_MONSTER, R_REF);
+EiMOS_RLC RLC(adc, RES_AMOS_MONSTER, R_REF);
 
 float weight[] = {0.3f, 0.3f, 0.3f, 0.3f};
 enum I2CPIN
@@ -33,32 +33,32 @@ enum I2CPIN
 void
 setup()
 {
-  EM.setNSlot(4); // set number of slots; 5k 1k 100 (NSLOT = 3), or 5k 1k 100 100 (NSLOT = 4)
+  RLC.setNSlot(4); // set number of slots; 5k 1k 100 (NSLOT = 3), or 5k 1k 100 100 (NSLOT = 4)
 
-  EM.setMesType(RES);     // choose measure type; resistance(RES) or CAP(capacitance)
-  EM.setPullType(PULLUP); // choose whether to pull up or down the reference resistors
+  RLC.setMesType(RES);     // choose measure type; resistance(RES) or CAP(capacitance)
+  RLC.setPullType(PULLUP); // choose whether to pull up or down the reference resistors
                           // one of these: PULLUP, PULLDOWN, INPUT_PULLUP
 
-  // EM.setOffset(200); // uncomment to enable busting sticks
-  EM.setWeight(weight);
-  // EM.setModeButton(button_mode); // uncomment to enable mode buttons
-  // EM.setHonbaButton(button_honba); // uncomment to enable a honba button
+  // RLC.setOffset(200); // uncomment to enable busting sticks
+  RLC.setWeight(weight);
+  // RLC.setModeButton(button_mode); // uncomment to enable mode buttons
+  // RLC.setHonbaButton(button_honba); // uncomment to enable a honba button
 
   Wire.begin(_SDA0, _SCL0);
   Wire1.begin(_SDA1, _SCL1); // tweak pins_arduino.h for second I2C
 
-  EM.initExtADC();
-  EM.setExtADC(/*setGain*/ 1, /*ADC Resolution*/ 16, /*VCC*/ 3.3f);
-  EM.begin();
+  RLC.initExtADC();
+  RLC.setExtADC(/*setGain*/ 1, /*ADC Resolution*/ 16, /*VCC*/ 3.3f);
+  RLC.begin();
 }
 void
 loop()
 {
   int score[4] = {0};
   int error[4] = {0};
-  EM.loop(500);
-  EM.getScore(score);
-  EM.getError(error);
+  RLC.loop(500);
+  RLC.getScore(score);
+  RLC.getError(error);
   // Now you have scores and errors.
   // Display them anyway you like
 }
