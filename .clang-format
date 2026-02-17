@@ -25,7 +25,8 @@ KeepEmptyLinesAtTheStartOfBlocks: true
 BreakAfterReturnType: AllDefinitions
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
-PointerAlignment: Left
+PointerAlignment: Right
+DerivePointerAlignment: false
 QualifierAlignment: Left
 SpaceAfterCStyleCast: true
 SpaceAfterTemplateKeyword: true

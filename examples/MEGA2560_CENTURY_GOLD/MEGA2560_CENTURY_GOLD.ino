@@ -1,4 +1,4 @@
-#include <EiMOS.h>
+#include <EiMOS_RLC.h>
 
 int charge_pin[] = {
   // please note: avoid using RX, TX pin as charge pins
@@ -26,29 +26,29 @@ float R_REF[] = {
 float CENTURY_GOLD_R_PAR[] = {
   1000.0f, PIN_NONE, PIN_NONE, PIN_NONE};
 
-EiMOS Asst(charge_pin, analog_pin, CAP_CENTURY_GOLD, R_REF); // CENTURY TENPAL, GOLD sticks
-// EiMOS Asst(charge_pin, analog_pin, CAP_CENTURY_SILVER, R_REF); //CENTURY TENPAL, SILVER sticks
+EiMOS_RLC RLC(charge_pin, analog_pin, CAP_CENTURY_GOLD, R_REF); // CENTURY TENPAL, GOLD sticks
+// EiMOS RLC(charge_pin, analog_pin, CAP_CENTURY_SILVER, R_REF); //CENTURY TENPAL, SILVER sticks
 
 void
 setup()
 {
-  Asst.setNSlot(3);
-  Asst.setPullType(INPUT_PULLUP);
-  Asst.setADCResolution(10);
-  Asst.setMesType(CAP);
-  Asst.setParRes(CENTURY_GOLD_R_PAR); // if silver sticks, comment this
-  Asst.setModeButton(button_mode);
-  Asst.setHonbaButton(button_honba);
-  // Asst.setOffset(200);
-  Asst.begin();
+  RLC.setNSlot(3);
+  RLC.setPullType(INPUT_PULLUP);
+  RLC.setADCResolution(10);
+  RLC.setMesType(CAP);
+  RLC.setParRes(CENTURY_GOLD_R_PAR); // if silver sticks, comment this
+  RLC.setModeButton(button_mode);
+  RLC.setHonbaButton(button_honba);
+  // RLC.setOffset(200);
+  RLC.begin();
 }
 void
 loop()
 {
   int score[4] = {0};
   int error[4] = {0};
-  Asst.loop(500); // loop measurements every 500ms
-  Asst.getScore(score);
-  Asst.getError(error);
+  RLC.loop(500); // loop measurements every 500ms
+  RLC.getScore(score);
+  RLC.getError(error);
   // now you have scores and errors, so display it way you like
 }
