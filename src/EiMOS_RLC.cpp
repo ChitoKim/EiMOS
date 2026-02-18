@@ -511,7 +511,7 @@ EiMOS_RLC::mesRLC(int slot_num)
   int dig_val;
   float RLC_unit = (pin_p->RLC_per_unit)[slot_num % NSLOT];
   float r_ref = (pin_p->R_REF)[slot_num % NSLOT];
-  float r_par = (pin_p->R_REF)[slot_num % NSLOT];
+  float r_par = (pin_p->R_PAR)[slot_num % NSLOT];
   float RC;
   unsigned long t, tf, dt, discharge_t;
   switch(mes_type)
@@ -533,22 +533,14 @@ EiMOS_RLC::mesRLC(int slot_num)
         dig_val = boolRead(apin);
         tf = micros();
         dt = (tf > t) ? tf - t : MAXTIME - t + tf;
-      } while(!dig_val && dt < 1000000L); // measure time until charged
+      } while(!dig_val && dt < 10000L); // measure time until charged
       pinMode(apin, INPUT);
       adc = adcRead(apin);
-      RC = adcToCap(dt, adc, r_ref); // read capacitor voltage and calculate capacitance
+      RC = adcToCap(dt, adc, r_ref, RLC_unit, r_par); // read capacitor voltage and calculate capacitance
       discharge_t = 5L * dt / 1000L;
-      if(pull_type == INPUT_PULLUP)
-      {
-        digitalWrite(cpin, HIGH);
-        pinMode(apin, INPUT_PULLUP); // HIGH to HIGH with pullup, discharge the capacitor
-        delay(discharge_t);
-        discharge(cpin, apin);
-      }
-      else
-      {
-        discharge(cpin, apin);
-      }
+      softDischarge(cpin, apin);
+      delay(discharge_t);
+      discharge(cpin, apin);
       break;
     default:
       return -1.0;
@@ -578,10 +570,6 @@ EiMOS_RLC::RLCToNum(float RLC, int slot_num)
       break;
     case CAP:
       ratio = RLC / RLC_unit;
-      if(hasParRes(r_par))
-      {
-        ratio = correctCap(ratio, r_par, r_ref);
-      }
       num = (int) ratio;
       if(num == 0 && ratio > 0.8f)
       {
@@ -617,19 +605,35 @@ EiMOS_RLC::hasParRes(float f)
   // return false because by default parres equals to PIN_NONE
 }
 float
-EiMOS_RLC::adcToCap(unsigned long t, uint16_t adc, float r_ref)
+EiMOS_RLC::adcToCap(unsigned long t, uint16_t adc, float r_ref, float c_unit, float r_par = PIN_NONE)
 {
-  // calculate capacitance using charge time and capacitor voltage
-  return -(float) t / r_ref / log(1.0f - (float) adc / (float) env_p->ADC_MAX);
-}
-float
-EiMOS_RLC::correctCap(float ratio, float r_par, float r_ref)
-{
-  // corrects the influence of resistance parallel to a capacitor
-  // example : CENTURY_GOLD 5k stick has a 1M parallel resistance
-  // needs experiments
-  float RHO = r_par / 2.0f / r_ref;
-  return (sqrt(RHO * RHO + 2.0f * RHO * ratio) - RHO);
+  // calculate capacitance from time and adc readings
+  // if r_par exists calculate by Newton-Raphson method
+  float vRatio = (float) adc / (float) env_p->ADC_MAX;
+  float log_arg = 1.0f - vRatio;
+  float k = - (float) t / r_ref / c_unit / log(log_arg);
+  float alpha = 1.0f;
+  if(!hasParRes(r_par))
+  {
+    return k * c_unit;
+  }
+  for(int i = 0; i < 200; i++)
+  {
+    alpha = r_par / (k * r_ref + r_par);
+    alpha = max(alpha, vRatio * 1.001);
+    log_arg = 1.0f - vRatio / alpha;
+    float inv_log = 1.0f / log(log_arg);
+    float f = k + t * inv_log / (alpha * r_ref * c_unit);
+    float df_dk = 1 + t / (r_par * c_unit) * (inv_log + inv_log * inv_log * vRatio / (alpha - vRatio)); 
+    float k_delta = -f / df_dk;
+    k += k_delta;
+
+    if(abs(k_delta) < k * 1e-3)
+    {
+      break;
+    }
+  }
+  return k * c_unit;
 }
 void
 EiMOS_RLC::discharge(int cpin, int apin)
@@ -638,8 +642,31 @@ EiMOS_RLC::discharge(int cpin, int apin)
   digitalWrite(cpin, LOW);
   pinMode(apin, OUTPUT);
   digitalWrite(apin, LOW);
-  while(adcRead(apin))
-    ;
+  delay(1);
+}
+void
+EiMOS_RLC::softDischarge(int cpin, int apin)
+{
+  switch(env_p->pull_type)
+  {
+    case INPUT_PULLUP:
+      pinMode(cpin, OUTPUT);
+      digitalWrite(cpin, HIGH);
+      pinMode(apin, INPUT_PULLUP); // HIGH to HIGH with pullup, discharge the capacitor
+      break;
+    case PULLUP:
+      pinMode(cpin, OUTPUT);
+      digitalWrite(cpin, HIGH);
+      pinMode(apin, INPUT);
+      break;
+    case PULLDOWN:
+      pinMode(cpin, OUTPUT);
+      digitalWrite(cpin, LOW);
+      pinMode(apin, INPUT);
+      break;
+    default:
+      break;
+  }
 }
 void
 EiMOS_RLC::charge(int cpin)
