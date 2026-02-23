@@ -613,6 +613,7 @@ EiMOS_RLC::adcToCap(unsigned long t, uint16_t adc, float r_ref, float c_unit, fl
   float log_arg = 1.0f - vRatio;
   float k = -(float) t / r_ref / c_unit / log(log_arg);
   float alpha = 1.0f;
+  float alpha_max;
   if(!hasParRes(r_par))
   {
     return k * c_unit;
@@ -620,7 +621,8 @@ EiMOS_RLC::adcToCap(unsigned long t, uint16_t adc, float r_ref, float c_unit, fl
   for(int i = 0; i < 200; i++)
   {
     alpha = r_par / (k * r_ref + r_par);
-    alpha = max(alpha, vRatio * 1.001);
+    alpha_max = vRatio * 1.001f;
+    alpha = max(alpha, alpha_max);
     log_arg = 1.0f - vRatio / alpha;
     float inv_log = 1.0f / log(log_arg);
     float f = k + t * inv_log / (alpha * r_ref * c_unit);
@@ -628,7 +630,7 @@ EiMOS_RLC::adcToCap(unsigned long t, uint16_t adc, float r_ref, float c_unit, fl
     float k_delta = -f / df_dk;
     k += k_delta;
 
-    if(abs(k_delta) < k * 1e-3)
+    if(fabs(k_delta) < k * 1e-3)
     {
       break;
     }
