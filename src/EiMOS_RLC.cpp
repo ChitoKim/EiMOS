@@ -611,7 +611,7 @@ EiMOS_RLC::adcToCap(unsigned long t, uint16_t adc, float r_ref, float c_unit, fl
   // if r_par exists calculate by Newton-Raphson method
   float vRatio = (float) adc / (float) env_p->ADC_MAX;
   float log_arg = 1.0f - vRatio;
-  float k = - (float) t / r_ref / c_unit / log(log_arg);
+  float k = -(float) t / r_ref / c_unit / log(log_arg);
   float alpha = 1.0f;
   if(!hasParRes(r_par))
   {
@@ -624,7 +624,7 @@ EiMOS_RLC::adcToCap(unsigned long t, uint16_t adc, float r_ref, float c_unit, fl
     log_arg = 1.0f - vRatio / alpha;
     float inv_log = 1.0f / log(log_arg);
     float f = k + t * inv_log / (alpha * r_ref * c_unit);
-    float df_dk = 1 + t / (r_par * c_unit) * (inv_log + inv_log * inv_log * vRatio / (alpha - vRatio)); 
+    float df_dk = 1 + t / (r_par * c_unit) * (inv_log + inv_log * inv_log * vRatio / (alpha - vRatio));
     float k_delta = -f / df_dk;
     k += k_delta;
 
@@ -642,7 +642,8 @@ EiMOS_RLC::discharge(int cpin, int apin)
   digitalWrite(cpin, LOW);
   pinMode(apin, OUTPUT);
   digitalWrite(apin, LOW);
-  delay(1);
+  while(analogRead(apin))
+    ;
 }
 void
 EiMOS_RLC::softDischarge(int cpin, int apin)
