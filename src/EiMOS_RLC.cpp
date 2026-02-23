@@ -611,7 +611,7 @@ EiMOS_RLC::adcToCap(unsigned long t, uint16_t adc, float r_ref, float c_unit, fl
   // if r_par exists calculate by Newton-Raphson method
   float vRatio = (float) adc / (float) env_p->ADC_MAX;
   float log_arg = 1.0f - vRatio;
-  float k = -(float) t / r_ref / c_unit / log(log_arg);
+  float k = -(float) t / r_ref / c_unit / logf(log_arg);
   float alpha = 1.0f;
   float alpha_max;
   if(!hasParRes(r_par))
@@ -624,13 +624,13 @@ EiMOS_RLC::adcToCap(unsigned long t, uint16_t adc, float r_ref, float c_unit, fl
     alpha_max = vRatio * 1.001f;
     alpha = max(alpha, alpha_max);
     log_arg = 1.0f - vRatio / alpha;
-    float inv_log = 1.0f / log(log_arg);
+    float inv_log = 1.0f / logf(log_arg);
     float f = k + t * inv_log / (alpha * r_ref * c_unit);
     float df_dk = 1 + t / (r_par * c_unit) * (inv_log + inv_log * inv_log * vRatio / (alpha - vRatio));
     float k_delta = -f / df_dk;
     k += k_delta;
 
-    if(fabs(k_delta) < k * 1e-3)
+    if(fabsf(k_delta) < k * 1e-3)
     {
       break;
     }
