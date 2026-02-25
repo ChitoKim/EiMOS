@@ -650,7 +650,7 @@ EiMOS_RLC::discharge(int cpin, int apin)
   pinMode(apin, OUTPUT);
   digitalWrite(apin, LOW);
   unsigned long t;
-  while(analogRead(apin) > 0 && micros() < t + 1000L )
+  while(analogRead(apin) && micros() < t + 1000L)
     ;
 }
 void
