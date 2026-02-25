@@ -1,7 +1,7 @@
 /*
 Special Thanks to Mahjong
 
-EiMOS Library - EiMOS.cpp
+EiMOS Library - EiMOS_RLC.cpp
 Formerly known as mahjongAsst
 Renamed June 6, 2024
 
@@ -16,7 +16,7 @@ All rights reserved.
 Codes for capacitance measurement is based on an example code of Jonathan Nethercott.
 https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
 */
-#include "EiMOS.h"
+#include "EiMOS_RLC.h"
 #include <Arduino.h>
 
 #define EXTADCNUM() ((pin_p->ext_adc[2] == nullptr) ? 1 : ((pin_p->ext_adc[3] == nullptr) ? 3 : 4)) // calculate number of adcs
@@ -48,35 +48,43 @@ PIN DEFAULT_PIN = {
   {0},
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE}};
 
-VAL DEFAULT_VAL = {{0, 0, 0, 0}, {0, 0, 0, 0}, {NORMAL, NORMAL, NORMAL, NORMAL}, DEFAULT_HONBA, 0, 0L};
+VAL DEFAULT_VAL = {
+  {{0, 0, 0, 0},
+   {0, 0, 0, 0},
+   {NORMAL, NORMAL, NORMAL, NORMAL},
+   DEFAULT_HONBA,
+   1000,
+   -1},
+  0,
+  0L};
 
 float VRANGE[] = {
   6.144f, 4.096f, 2.048f, 1.024f, .512f, .256f};
 
-EiMOS::EiMOS(MUX *mux, ENV *env, PIN *pin, VAL *val)
+EiMOS_RLC::EiMOS_RLC(MUX *mux, ENV *env, PIN *pin, VAL *val)
 {
   mux_p = mux;
   env_p = env;
   pin_p = pin;
   val_p = val;
 }
-EiMOS::EiMOS(int charge[], int analog[], float v_unit[], float ref[])
-    : EiMOS(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+EiMOS_RLC::EiMOS_RLC(int charge[], int analog[], float v_unit[], float ref[])
+    : EiMOS_RLC(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
 {
   memcpy(pin_p->charge_pin, charge, 16 * sizeof(int));
   memcpy(pin_p->analog_pin, analog, 16 * sizeof(int));
   memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float));
 }
-EiMOS::EiMOS(int analog[], float v_unit[], float ref[])
-    : EiMOS(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+EiMOS_RLC::EiMOS_RLC(int analog[], float v_unit[], float ref[])
+    : EiMOS_RLC(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
 {
   memcpy(pin_p->analog_pin, analog, 16 * sizeof(int));
   memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float));
 }
-EiMOS::EiMOS(int charge[], int analog, float v_unit[], float ref[])
-    : EiMOS(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+EiMOS_RLC::EiMOS_RLC(int charge[], int analog, float v_unit[], float ref[])
+    : EiMOS_RLC(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
 {
   int i;
   memcpy(pin_p->charge_pin, charge, 16 * sizeof(int));
@@ -87,8 +95,8 @@ EiMOS::EiMOS(int charge[], int analog, float v_unit[], float ref[])
   memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float));
 }
-EiMOS::EiMOS(int analog, float v_unit[], float ref[])
-    : EiMOS(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+EiMOS_RLC::EiMOS_RLC(int analog, float v_unit[], float ref[])
+    : EiMOS_RLC(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
 {
   int i;
   for(i = 0; i < 16; i++)
@@ -98,59 +106,64 @@ EiMOS::EiMOS(int analog, float v_unit[], float ref[])
   memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float));
 }
-EiMOS::EiMOS(int charge[], ADS1X15 *ext_adc[], float v_unit[], float ref[])
-    : EiMOS(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+EiMOS_RLC::EiMOS_RLC(int charge[], ADS1X15 *ext_adc[], float v_unit[], float ref[])
+    : EiMOS_RLC(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
 {
   memcpy(pin_p->charge_pin, charge, 16 * sizeof(int));
   memcpy(pin_p->ext_adc, ext_adc, 4 * sizeof(ADS1X15 *));
   memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float));
 }
-EiMOS::EiMOS(ADS1X15 *ext_adc[], float v_unit[], float ref[])
-    : EiMOS(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
+EiMOS_RLC::EiMOS_RLC(ADS1X15 *ext_adc[], float v_unit[], float ref[])
+    : EiMOS_RLC(&NO_MUX, &DEFAULT_ENV, &DEFAULT_PIN, &DEFAULT_VAL)
 {
   memcpy(pin_p->ext_adc, ext_adc, 4 * sizeof(ADS1X15 *));
   memcpy(pin_p->RLC_per_unit, v_unit, 4 * sizeof(float));
   memcpy(pin_p->R_REF, ref, 4 * sizeof(float));
+}
+void
+EiMOS_RLC::measure()
+{
+  this->loop();
 }
 MUX *
-EiMOS::getMUX()
+EiMOS_RLC::getMUX()
 {
   return mux_p;
 }
 ENV *
-EiMOS::getENV()
+EiMOS_RLC::getENV()
 {
   return env_p;
 }
 PIN *
-EiMOS::getPIN()
+EiMOS_RLC::getPIN()
 {
   return pin_p;
 }
 VAL *
-EiMOS::getVAL()
+EiMOS_RLC::getVAL()
 {
   return val_p;
 }
 void
-EiMOS::setMUX4051(int addr[], int enb[])
+EiMOS_RLC::setMUX4051(int addr[], int enb[])
 {
   mux_p->setMUX4051(addr, enb);
 }
 void
-EiMOS::setMUX4067(int addr[])
+EiMOS_RLC::setMUX4067(int addr[])
 {
   mux_p->setMUX4067(addr);
 }
 void
-EiMOS::initMUX()
+EiMOS_RLC::initMUX()
 {
   // initialise the pins of MUX
   mux_p->initMUX();
 }
 void
-EiMOS::initExtADC()
+EiMOS_RLC::initExtADC()
 {
   ADS1X15 *ads = nullptr;
   for(int i = 0; i < 4 && (ads = pin_p->ext_adc[i]) != nullptr; i++)
@@ -162,13 +175,13 @@ EiMOS::initExtADC()
   }
 }
 void
-EiMOS::slotSelect(int slot_num)
+EiMOS_RLC::slotSelect(int slot_num)
 {
   // switching to corresponding slot of MUX(es)
   mux_p->slotSelect(slot_num);
 }
 void
-EiMOS::setNSlot(int a)
+EiMOS_RLC::setNSlot(int a)
 {
   // set the number of slots; 5k 1k 5c 1c or 5k 1k 5c/1c
   if(a > 4)
@@ -184,19 +197,19 @@ EiMOS::setNSlot(int a)
   }
 }
 void
-EiMOS::setPullType(int a)
+EiMOS_RLC::setPullType(int a)
 {
   // set pull type of resistor
   // PULLUP | INPUT_PULLUP | PULLDOWN
   env_p->pull_type = a;
 }
 void
-EiMOS::setMesType(int a)
+EiMOS_RLC::setMesType(int a)
 {
   env_p->mes_type = a;
 }
 void
-EiMOS::setADCResolution(int bit)
+EiMOS_RLC::setADCResolution(int bit)
 {
   // set ADC_MAX according to the ADC Resolution
   env_p->ADC_MAX = 1 << bit;
@@ -205,7 +218,7 @@ EiMOS::setADCResolution(int bit)
 #endif
 }
 void
-EiMOS::setExtADC(int gain, int bit, float vcc, int mode)
+EiMOS_RLC::setExtADC(int gain, int bit, float vcc, int mode)
 {
   // mode; 0 : single-ended input, 1 : differential input
   for(int i = 0; i < 4 && pin_p->ext_adc[i] != nullptr; i++)
@@ -215,17 +228,17 @@ EiMOS::setExtADC(int gain, int bit, float vcc, int mode)
   env_p->ADC_MAX = (uint16_t) ((float) (1 << (bit - !mode)) * (vcc / VRANGE[gain]));
 }
 void
-EiMOS::setWeight(float weight[])
+EiMOS_RLC::setWeight(float weight[])
 {
   memcpy(pin_p->weight, weight, 4 * sizeof(int));
 }
 void
-EiMOS::setOffset(int offset)
+EiMOS_RLC::setOffset(int offset)
 {
   val_p->bust_offset = offset;
 }
 void
-EiMOS::setModeButton(int btn[])
+EiMOS_RLC::setModeButton(int btn[])
 {
   int i;
   memcpy(pin_p->button_mode, btn, 4 * sizeof(int));
@@ -235,57 +248,62 @@ EiMOS::setModeButton(int btn[])
   }
 }
 void
-EiMOS::setHonbaButton(int btn)
+EiMOS_RLC::setHonbaButton(int btn)
 {
   // set a honba button, attached to interrupt
   pin_p->button_honba = btn;
   _button_honba = btn;
-  _honba = &(val_p->honba);
+  _honba = &(val_p->results.honba);
   pinMode(btn, INPUT_PULLUP);
   attachInterrupt(btn, _HONBA, CHANGE);
 }
+Results *
+EiMOS_RLC::getResults()
+{
+  return &(val_p->results);
+}
 void
-EiMOS::getScore(int scr[])
+EiMOS_RLC::getScore(int scr[])
 {
   // copy the scores to the array scr
-  memcpy(scr, val_p->score, 4 * sizeof(int));
+  memcpy(scr, val_p->results.score, 4 * sizeof(int));
 }
 int *
-EiMOS::getScore()
+EiMOS_RLC::getScore()
 {
-  return val_p->score;
+  return val_p->results.score;
 }
 
 void
-EiMOS::getError(int err[])
+EiMOS_RLC::getError(int err[])
 {
   // copy the errors to the array scr
   int i;
-  int *error = val_p->error;
-  memcpy(err, val_p->error, 4 * sizeof(int));
+  int *error = val_p->results.error;
+  memcpy(err, val_p->results.error, 4 * sizeof(int));
 }
 int *
-EiMOS::getError()
+EiMOS_RLC::getError()
 {
-  return val_p->error;
+  return val_p->results.error;
 }
 void
-EiMOS::getMode(int mode[])
+EiMOS_RLC::getMode(int mode[])
 {
-  memcpy(mode, val_p->mode, 4 * sizeof(int));
+  memcpy(mode, val_p->results.mode, 4 * sizeof(int));
 }
 int *
-EiMOS::getMode()
+EiMOS_RLC::getMode()
 {
-  return val_p->mode;
+  return val_p->results.mode;
 }
 int
-EiMOS::getHonba()
+EiMOS_RLC::getHonba()
 {
-  return val_p->honba;
+  return val_p->results.honba;
 }
 int
-EiMOS::boolRead(int pin)
+EiMOS_RLC::boolRead(int pin)
 {
   // digitalRead, if PULLDOWN, invert the output
   int pull_type = env_p->pull_type;
@@ -299,7 +317,7 @@ EiMOS::boolRead(int pin)
   }
 }
 uint16_t
-EiMOS::adcRead(int pin)
+EiMOS_RLC::adcRead(int pin)
 {
   // analogRead, if PULLDOWN, invert the output
   int pull_type = env_p->pull_type;
@@ -315,7 +333,7 @@ EiMOS::adcRead(int pin)
   }
 }
 uint16_t
-EiMOS::extADCRead(int slot_num)
+EiMOS_RLC::extADCRead(int slot_num)
 {
   uint16_t adc;
   int pull_type = env_p->pull_type;
@@ -330,7 +348,7 @@ EiMOS::extADCRead(int slot_num)
   return adc;
 }
 void
-EiMOS::pullAnalog(int apin)
+EiMOS_RLC::pullAnalog(int apin)
 {
   // setting pinMode according to the pulltype
   if(pin_p->analog_pin[0] == PIN_NONE)
@@ -342,7 +360,7 @@ EiMOS::pullAnalog(int apin)
 }
 
 void
-EiMOS::mesLoop(float RLC[])
+EiMOS_RLC::mesLoop(float RLC[])
 {
   // store R or C in the array RLC
   int i;
@@ -354,7 +372,7 @@ EiMOS::mesLoop(float RLC[])
   }
 }
 void
-EiMOS::numLoop(float RLC[], int num[])
+EiMOS_RLC::numLoop(float RLC[], int num[])
 {
   // store number of sticks in the array num
   int i;
@@ -369,13 +387,13 @@ EiMOS::numLoop(float RLC[], int num[])
   }
 }
 void
-EiMOS::scoreLoop(int num[])
+EiMOS_RLC::scoreLoop(int num[])
 {
   // finally outputing the score
   int i;
   int NSLOT = env_p->NSLOT;
-  int *error = val_p->error;
-  int *score = val_p->score;
+  int *error = val_p->results.error;
+  int *score = val_p->results.score;
   int offset = val_p->bust_offset;
   for(i = 0; i < 4; i++)
   {
@@ -396,11 +414,11 @@ EiMOS::scoreLoop(int num[])
   }
 }
 void
-EiMOS::modeLoop()
+EiMOS_RLC::modeLoop()
 {
   int i, tmp;
   int *button_mode = pin_p->button_mode;
-  int *mode = val_p->mode;
+  int *mode = val_p->results.mode;
   if(button_mode[0] == PIN_NONE)
   {
     return;
@@ -414,7 +432,7 @@ EiMOS::modeLoop()
   }
 }
 void
-EiMOS::loop()
+EiMOS_RLC::loop()
 {
   float RLC[16];
   int num[16];
@@ -424,7 +442,7 @@ EiMOS::loop()
   scoreLoop(num);
 }
 void
-EiMOS::loop(int period_ms)
+EiMOS_RLC::loop(int period_ms)
 {
   unsigned long currentTime, dt;
   currentTime = millis();
@@ -436,7 +454,7 @@ EiMOS::loop(int period_ms)
   }
 }
 void
-EiMOS::loop(float RLC[], int num[])
+EiMOS_RLC::loop(float RLC[], int num[])
 {
   modeLoop();
   mesLoop(RLC);
@@ -446,7 +464,7 @@ EiMOS::loop(float RLC[], int num[])
 //
 ///// above : common functions
 void
-EiMOS::begin()
+EiMOS_RLC::begin()
 {
   int i;
   int NUMPIN = env_p->NSLOT;
@@ -457,7 +475,7 @@ EiMOS::begin()
   digitalWrite(LED_BUILTIN, HIGH);
 }
 void
-EiMOS::prepMes(int slot_num)
+EiMOS_RLC::prepMes(int slot_num)
 {
   int mes_type = env_p->mes_type;
   int cpin = (pin_p->charge_pin)[slot_num];
@@ -491,7 +509,7 @@ EiMOS::prepMes(int slot_num)
   }
 }
 float
-EiMOS::mesRLC(int slot_num)
+EiMOS_RLC::mesRLC(int slot_num)
 {
   int NSLOT = env_p->NSLOT;
   int pull_type = env_p->pull_type;
@@ -504,7 +522,7 @@ EiMOS::mesRLC(int slot_num)
   int dig_val;
   float RLC_unit = (pin_p->RLC_per_unit)[slot_num % NSLOT];
   float r_ref = (pin_p->R_REF)[slot_num % NSLOT];
-  float r_par = (pin_p->R_REF)[slot_num % NSLOT];
+  float r_par = (pin_p->R_PAR)[slot_num % NSLOT];
   uint32_t adc_bias = (pin_p->adc_bias)[slot_num % NSLOT];
   float RC;
   unsigned long t, tf, dt, discharge_t;
@@ -527,31 +545,15 @@ EiMOS::mesRLC(int slot_num)
         dig_val = boolRead(apin);
         tf = micros();
         dt = (tf > t) ? tf - t : MAXTIME - t + tf;
-      } while(!dig_val && dt < 1000000L); // measure time until charged
+      } while(!dig_val && dt < 10000L); // measure time until charged
       pinMode(apin, INPUT);
       adc = adcRead(apin);
-      RC = adcToCap(dt, adc, r_ref); // read capacitor voltage and calculate capacitance
+      RC = adcToCap(dt, adc, r_ref, RLC_unit, r_par); // read capacitor voltage and calculate capacitance
       discharge_t = 5L * dt / 1000L;
-      if(pull_type == INPUT_PULLUP)
-      {
-        digitalWrite(cpin, HIGH);
-        pinMode(apin, INPUT_PULLUP); // HIGH to HIGH with pullup, discharge the capacitor
-        delay(discharge_t);
-        discharge(cpin, apin);
-      }
-      else
-      {
-        discharge(cpin, apin);
-      }
+      softDischarge(cpin, apin);
+      delay(discharge_t);
+      discharge(cpin, apin);
       break;
-    case ACT:
-      // active resistance measurement using opamp. 
-      // the function returns conductance(milli-Siemens).
-      delay(1);
-      pinMode(apin, INPUT);
-      adc = (pin_p->ext_adc[0] == nullptr) ? adcRead(apin) : extADCRead(slot_num);
-      RC = (adc <= adc_bias) ? 0 : (((float) adc/ (float) adc_bias - 1.0f) / r_ref);
-     break;
     default:
       return -1.0;
       break;
@@ -559,7 +561,7 @@ EiMOS::mesRLC(int slot_num)
   return RC;
 }
 int
-EiMOS::RLCToNum(float RLC, int slot_num)
+EiMOS_RLC::RLCToNum(float RLC, int slot_num)
 {
   int i = 0, num = 0;
   int NSLOT = env_p->NSLOT;
@@ -580,10 +582,6 @@ EiMOS::RLCToNum(float RLC, int slot_num)
       break;
     case CAP:
       ratio = RLC / RLC_unit;
-      if(hasParRes(r_par))
-      {
-        ratio = correctCap(ratio, r_par, r_ref);
-      }
       num = (int) ratio;
       if(num == 0 && ratio > 0.8f)
       {
@@ -603,7 +601,7 @@ EiMOS::RLCToNum(float RLC, int slot_num)
 // resistance specific
 //////
 float
-EiMOS::adcToRes(uint16_t adc, float ref)
+EiMOS_RLC::adcToRes(uint16_t adc, float ref)
 {
   // calculate resistance
   return (float) adc * ref / (float) (env_p->ADC_MAX - adc);
@@ -612,50 +610,98 @@ EiMOS::adcToRes(uint16_t adc, float ref)
 /////
 
 void
-EiMOS::setParRes(float r_par[])
+EiMOS_RLC::setParRes(float r_par[])
 {
   memcpy(pin_p->R_PAR, r_par, 4 * sizeof(float));
 }
 int
-EiMOS::hasParRes(float f)
+EiMOS_RLC::hasParRes(float f)
 {
   return (f > 0.0);
   // return false because by default parres equals to PIN_NONE
 }
 float
-EiMOS::adcToCap(unsigned long t, uint16_t adc, float r_ref)
+EiMOS_RLC::adcToCap(unsigned long t, uint16_t adc, float r_ref, float c_unit, float r_par = PIN_NONE)
 {
-  // calculate capacitance using charge time and capacitor voltage
-  return -(float) t / r_ref / log(1.0f - (float) adc / (float) env_p->ADC_MAX);
-}
-float
-EiMOS::correctCap(float ratio, float r_par, float r_ref)
-{
-  // corrects the influence of resistance parallel to a capacitor
-  // example : CENTURY_GOLD 5k stick has a 1M parallel resistance
-  // needs experiments
-  float RHO = r_par / 2.0f / r_ref;
-  return (sqrt(RHO * RHO + 2.0f * RHO * ratio) - RHO);
+  // calculate capacitance from time and adc readings
+  // if r_par exists calculate by Newton-Raphson method
+  float vRatio = (float) adc / (float) env_p->ADC_MAX;
+  float log_arg = 1.0f - vRatio;
+  float r_ref_c_unit_inv = 1.0f / (r_ref * c_unit);
+  float r_par_c_unit_inv = 1.0f / (r_par * c_unit);
+  float t_r_ref_c_unit_inv = t * r_ref_c_unit_inv;
+  float t_r_par_c_unit_inv = t * r_par_c_unit_inv;
+  float k = -(float) t * r_ref_c_unit_inv / logf(log_arg); // k = -t / (r_ref c_unit log(1 - Vc / Vcc))
+  float alpha = 1.0f;
+  float alpha_max;
+  if(!hasParRes(r_par))
+  {
+    return k * c_unit;
+  }
+  for(int i = 0; i < 200; i++)
+  {
+    alpha = r_par / (k * r_ref + r_par);
+    alpha_max = vRatio * 1.001f;
+    alpha = max(alpha, alpha_max);
+    log_arg = 1.0f - vRatio / alpha;
+    float inv_log = 1.0f / logf(log_arg);
+    float f = k + t_r_ref_c_unit_inv * inv_log / alpha; // f = k + t / (alpha * r_ref * c_unit * log(1 - Vc/alpha Vcc))
+    float df_dk = 1.0f + t_r_par_c_unit_inv * (inv_log + inv_log * inv_log * vRatio / (alpha - vRatio));
+    // df/dk = 1 + t / (r_par c_unit) * {1 / log(1 - Vc/alpha Vcc) + vRatio / log(1 - Vc/alpha Vcc) / (alpha - vRatio) }
+    float k_delta = -f / df_dk;
+    k += k_delta;
+
+    if(fabsf(k_delta) < k * 1e-3f)
+    {
+      break;
+    }
+  }
+  return k * c_unit;
 }
 void
-EiMOS::discharge(int cpin, int apin)
+EiMOS_RLC::discharge(int cpin, int apin)
 {
   pinMode(cpin, OUTPUT);
   digitalWrite(cpin, LOW);
   pinMode(apin, OUTPUT);
   digitalWrite(apin, LOW);
-  while(adcRead(apin))
+  unsigned long t;
+  while(analogRead(apin) && micros() < t + 1000L)
     ;
 }
 void
-EiMOS::charge(int cpin)
+EiMOS_RLC::softDischarge(int cpin, int apin)
+{
+  switch(env_p->pull_type)
+  {
+    case INPUT_PULLUP:
+      pinMode(cpin, OUTPUT);
+      digitalWrite(cpin, HIGH);
+      pinMode(apin, INPUT_PULLUP); // HIGH to HIGH with pullup, discharge the capacitor
+      break;
+    case PULLUP:
+      pinMode(cpin, OUTPUT);
+      digitalWrite(cpin, HIGH);
+      pinMode(apin, INPUT);
+      break;
+    case PULLDOWN:
+      pinMode(cpin, OUTPUT);
+      digitalWrite(cpin, LOW);
+      pinMode(apin, INPUT);
+      break;
+    default:
+      break;
+  }
+}
+void
+EiMOS_RLC::charge(int cpin)
 {
   pinMode(cpin, OUTPUT);
   digitalWrite(cpin, (env_p->pull_type == INPUT_PULLUP || env_p->pull_type == PULLUP) ? LOW : HIGH);
 }
 
 void
-EiMOS::setActiveRes(int sw[], float vbias[], float vcc)
+EiMOS_RLC::setActiveRes(int sw[], float vbias[], float vcc)
 {
   for(int i = 0; i < env_p->NSLOT; i++)
   {

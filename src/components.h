@@ -40,10 +40,7 @@ typedef struct PIN
 typedef struct VAL
 {
   // handles actual values(mainly score)
-  int score[4];
-  int error[4]; // checks if the sticks are in the right places; if error 1, if not 0
-  int mode[4];  // display mode of the scores : NORMAL, DIFF(score difference), PM(+/-)
-  int honba;
+  Results results;
   int bust_offset; // dealing with the 10k busting sticks; subtracts the offset from players' scores
   unsigned long lastTime;
 } VAL;
