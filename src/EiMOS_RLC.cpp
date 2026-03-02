@@ -554,6 +554,14 @@ EiMOS_RLC::mesRLC(int slot_num)
       delay(discharge_t);
       discharge(cpin, apin);
       break;
+    case ACT:
+      // active resistance measurement using opamp.
+      // the function returns conductance(milli-Siemens).
+      delay(1);
+      pinMode(apin, INPUT);
+      adc = (pin_p->ext_adc[0] == nullptr) ? adcRead(apin) : extADCRead(slot_num);
+      RC = (adc <= adc_bias) ? 0 : (((float) adc/ (float) adc_bias - 1.0f) / r_ref);
+     break;
     default:
       return -1.0;
       break;
