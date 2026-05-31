@@ -25,7 +25,12 @@ https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
 
 volatile int _button_honba = PIN_NONE;
 volatile int *_honba = nullptr;
-volatile unsigned long _press_t = 0L;
+volatile unsigned long pressStartTime = 0L;
+volatile unsigned long lastInterruptTime = 0L;
+volatile bool pressed = false;
+volatile bool processed = false;
+
+const unsigned long debounceDelay = 50L;
 MUX NO_MUX(nullptr, 0, nullptr, 0);
 ENV DEFAULT_ENV = {DEFAULT_NSLOT, DEFAULT_NUMPIN, PULLDOWN, RES, DEFAULT_ADC_MAX};
 PIN DEFAULT_PIN = {
@@ -721,19 +726,55 @@ EiMOS_RLC::setActiveRes(int sw[], float vbias[], float vcc)
 void
 _HONBA()
 {
-  if(digitalRead(_button_honba) == HIGH) // released
+  unsigned long now = millis();
+  int btnState = digitalRead(_button_honba); // read current button state
+
+  if(btnState == LOW)
   {
-    if(millis() - _press_t > 1000L) // if pressed long, reset honba
+    // if pressed check the debouncing and record the time
+    if(now - lastInterruptTime > debounceDelay)
     {
-      *_honba = 0;
+      if(!pressed)
+      {
+        pressStartTime = now;
+        pressed = true;
+        processed = false;
+      }
     }
-    else if(millis() - _press_t > 50L) // if pressed short, increment honba
-    {
-      (*_honba)++;
-    }
+    lastInterruptTime = now;
   }
-  else // pressed
+  else
   {
-    _press_t = millis();
+    // if released
+    if(now - lastInterruptTime > debounceDelay)
+    {
+      if(pressed && !processed)
+      {
+        unsigned long duration = now - pressStartTime;
+
+        if(duration >= 50)
+        {
+          if(duration < 500)
+          {
+            // increment honba when short-pressed
+            if(_honba)
+            {
+              (*_honba)++;
+            }
+          }
+          else
+          {
+            // reset honba to 0 when long-pressed
+            if(_honba)
+            {
+              *_honba = 0;
+            }
+          }
+          processed = true;
+          pressed = false;
+        }
+      }
+    }
+    lastInterruptTime = now;
   }
 }
