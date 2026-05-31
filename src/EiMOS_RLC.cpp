@@ -255,7 +255,7 @@ EiMOS_RLC::setHonbaButton(int btn)
   _button_honba = btn;
   _honba = &(val_p->results.honba);
   pinMode(btn, INPUT_PULLUP);
-  attachInterrupt(btn, _HONBA, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(btn), _HONBA, CHANGE);
 }
 Results *
 EiMOS_RLC::getResults()
