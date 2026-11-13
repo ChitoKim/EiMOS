@@ -32,6 +32,10 @@ typedef struct PIN
   float R_PAR[4];        // resistance parallel to the capacitor; only for specific types of models
                          // such as GOLD-stick CENTURY TENPAL
   float weight[4];       // only for resistors. add weight to the ratio calculated
+
+  // active conductance measurement using opamp
+  uint16_t adc_bias[4]; // adc value at zero sticks 
+  int feedbackSW[4]; // For switching opamp feedback resistors. these output pins are connected to gate of NMOS
 } PIN;
 typedef struct VAL
 {

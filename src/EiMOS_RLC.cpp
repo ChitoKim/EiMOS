@@ -25,7 +25,12 @@ https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
 
 volatile int _button_honba = PIN_NONE;
 volatile int *_honba = nullptr;
-volatile unsigned long _press_t = 0L;
+volatile unsigned long pressStartTime = 0L;
+volatile unsigned long lastInterruptTime = 0L;
+volatile bool pressed = false;
+volatile bool processed = false;
+
+const unsigned long debounceDelay = 50L;
 MUX NO_MUX(nullptr, 0, nullptr, 0);
 ENV DEFAULT_ENV = {DEFAULT_NSLOT, DEFAULT_NUMPIN, PULLDOWN, RES, DEFAULT_ADC_MAX};
 PIN DEFAULT_PIN = {
@@ -44,7 +49,9 @@ PIN DEFAULT_PIN = {
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
   {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE},
-  {0.3f, 0.3f, 0.3f, 0.3f}};
+  {0.3f, 0.3f, 0.3f, 0.3f},
+  {0},
+  {PIN_NONE, PIN_NONE, PIN_NONE, PIN_NONE}};
 
 VAL DEFAULT_VAL = {
   {{0, 0, 0, 0},
@@ -253,7 +260,7 @@ EiMOS_RLC::setHonbaButton(int btn)
   _button_honba = btn;
   _honba = &(val_p->results.honba);
   pinMode(btn, INPUT_PULLUP);
-  attachInterrupt(btn, _HONBA, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(btn), _HONBA, CHANGE);
 }
 Results *
 EiMOS_RLC::getResults()
@@ -493,6 +500,15 @@ EiMOS_RLC::prepMes(int slot_num)
       slotSelect(slot_num);
       discharge(cpin, apin);
       break;
+    case ACT:
+      slotSelect(slot_num);
+      for(int i = 0; i < env_p->NSLOT; i++)
+      {
+        digitalWrite((pin_p->feedbackSW)[i], LOW);
+      }
+      digitalWrite((pin_p->feedbackSW)[slot_num % env_p->NSLOT], HIGH);
+      delay(1);
+      break;
     default:
       break;
   }
@@ -512,6 +528,7 @@ EiMOS_RLC::mesRLC(int slot_num)
   float RLC_unit = (pin_p->RLC_per_unit)[slot_num % NSLOT];
   float r_ref = (pin_p->R_REF)[slot_num % NSLOT];
   float r_par = (pin_p->R_PAR)[slot_num % NSLOT];
+  uint32_t adc_bias = (pin_p->adc_bias)[slot_num % NSLOT];
   float RC;
   unsigned long t, tf, dt, discharge_t;
   switch(mes_type)
@@ -542,6 +559,14 @@ EiMOS_RLC::mesRLC(int slot_num)
       delay(discharge_t);
       discharge(cpin, apin);
       break;
+    case ACT:
+      // active resistance measurement using opamp.
+      // the function returns conductance(milli-Siemens).
+      delay(1);
+      pinMode(apin, INPUT);
+      adc = (pin_p->ext_adc[0] == nullptr) ? adcRead(apin) : extADCRead(slot_num);
+      RC = (adc <= adc_bias) ? 0 : (((float) adc/ (float) adc_bias - 1.0f) / r_ref);
+     break;
     default:
       return -1.0;
       break;
@@ -575,6 +600,10 @@ EiMOS_RLC::RLCToNum(float RLC, int slot_num)
       {
         num = 1;
       }
+      break;
+    case ACT:
+      ratio = RLC * RLC_unit;
+      num = (int) (ratio + .5f);
       break;
     default:
       break;
@@ -683,22 +712,69 @@ EiMOS_RLC::charge(int cpin)
   pinMode(cpin, OUTPUT);
   digitalWrite(cpin, (env_p->pull_type == INPUT_PULLUP || env_p->pull_type == PULLUP) ? LOW : HIGH);
 }
+
+void
+EiMOS_RLC::setActiveRes(int sw[], float vbias[], float vcc)
+{
+  for(int i = 0; i < env_p->NSLOT; i++)
+  {
+    (pin_p->feedbackSW)[i] = sw[i];
+    pinMode((pin_p->feedbackSW)[i], OUTPUT);
+    (pin_p->adc_bias)[i] = (uint16_t) ((float) env_p->ADC_MAX * vbias[i] / vcc);
+  }
+}
 void
 _HONBA()
 {
-  if(digitalRead(_button_honba) == HIGH) // released
+  unsigned long now = millis();
+  int btnState = digitalRead(_button_honba); // read current button state
+
+  if(btnState == LOW)
   {
-    if(millis() - _press_t > 1000L) // if pressed long, reset honba
+    // if pressed check the debouncing and record the time
+    if(now - lastInterruptTime > debounceDelay)
     {
-      *_honba = 0;
+      if(!pressed)
+      {
+        pressStartTime = now;
+        pressed = true;
+        processed = false;
+      }
     }
-    else if(millis() - _press_t > 50L) // if pressed short, increment honba
-    {
-      (*_honba)++;
-    }
+    lastInterruptTime = now;
   }
-  else // pressed
+  else
   {
-    _press_t = millis();
+    // if released
+    if(now - lastInterruptTime > debounceDelay)
+    {
+      if(pressed && !processed)
+      {
+        unsigned long duration = now - pressStartTime;
+
+        if(duration >= 50)
+        {
+          if(duration < 500)
+          {
+            // increment honba when short-pressed
+            if(_honba)
+            {
+              (*_honba)++;
+            }
+          }
+          else
+          {
+            // reset honba to 0 when long-pressed
+            if(_honba)
+            {
+              *_honba = 0;
+            }
+          }
+          processed = true;
+          pressed = false;
+        }
+      }
+    }
+    lastInterruptTime = now;
   }
 }
