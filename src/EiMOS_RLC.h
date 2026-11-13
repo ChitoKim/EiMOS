@@ -50,7 +50,7 @@ https://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii/
 #endif
 // INPUT_PULLUP
 
-#define MAXTIME sizeof(unsigned long)
+#define MAXTIME 0xFFFFFFFFL
 
 #define NORMAL 1
 #define DIFF 0
